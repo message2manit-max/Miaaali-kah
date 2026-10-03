@@ -1,6 +1,7 @@
 import { expect, mock, test } from 'claude-code/testing'
 
 import { ROWS, frame } from './cat'
+import { catSvg } from './svg'
 
 const SPINNER = {
   component: 'Spinner',
@@ -20,16 +21,32 @@ test('the spinner becomes a pixel cat on the terminal, and keeps moving', async 
   await clock.advance(5000) // the ticker gives up on a cat nobody draws
 })
 
-test('other surfaces keep their own spinner', async ($, on) => {
+test('the desktop spinner shows the animated cat', async ($, on) => {
   mock.clock(on)
-  on('ui.render', ($, e) => {
-    const { Text } = $.ui.resolve(e)
-    return <Text>Sauteing</Text>
-  })
   const ui = await $.ui.mount({ plugin: 'pixel-cat', surface: 'desktop', ...SPINNER })
-  expect(await ui.find({ key: 'cat' })).toBeUndefined()
+  expect(await ui.find({ type: 'Svg' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /Sauteing/ })).toBeDefined()
   await ui.unmount()
+})
+
+test('the phone gets her in a pane', async $ => {
+  for (const surface of ['mobile', 'vscode', 'desktop'] as const) {
+    const ui = await $.ui.mount({
+      plugin: 'pixel-cat',
+      surface,
+      component: 'Pane',
+      requestId: 'pixel-cat',
+      props: { title: 'Pixel Cat' } as never,
+    })
+    expect(await ui.find({ type: 'Svg' })).toBeDefined()
+    await ui.unmount()
+  }
+})
+
+test('the app drawing fits what an Svg takes', () => {
+  const svg = catSvg()
+  expect(svg.startsWith('<svg')).toBe(true)
+  expect(svg.length).toBeLessThan(131072)
 })
 
 test('every frame of the routine packs the full grid', async () => {

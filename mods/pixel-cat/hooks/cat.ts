@@ -4,11 +4,11 @@
 export const ROWS = 9 // 8 rows of picture (16 px tall) + 1 caption row
 export const TICK_MS = 100
 
-const PX_H = 16
+export const PX_H = 16
 const GROUND = 14 // first grass pixel row
 const SPRITE_W = 22
-const DEFAULT = 0x01000000 // the terminal's own color
-const NONE = -1
+export const DEFAULT = 0x01000000 // the terminal's own color
+export const NONE = -1
 
 const O = 0xe8913a // ginger fur
 const D = 0xa85a24 // stripes, far legs
@@ -221,7 +221,7 @@ function drawButterfly(cv: Canvas, x: number, y: number, flap: number) {
   cv.set(x, flap ? y + 1 : y, WING_HI)
 }
 
-function drawGround(cv: Canvas) {
+export function drawGround(cv: Canvas) {
   for (let x = 0; x < cv.w; x++) {
     const h = (x * 2654435761) >>> 0
     cv.set(x, GROUND, h % 5 === 0 ? GRASS_HI : GRASS)
@@ -238,20 +238,30 @@ function drawGround(cv: Canvas) {
 
 // --------------------------------------------------------------- the plan
 
-/** What she does at `tick`: a looping little routine sized to the width. */
-export function stage(tick: number, w: number, cv: Canvas): string {
+function routine(w: number) {
   const cx = Math.max(1, Math.floor((w - SPRITE_W) / 2) - 4) // where she sits
   const lx = cx + 10 // where she lands after the pounce
   const segs: [string, number][] = [
-    ['walkIn', cx + SPRITE_W],
-    ['sit', 24],
+    ['sit', 24], // starts sitting, so the first frame already shows her
     ['lick', 30],
     ['stretch', 22],
     ['hunt', 74],
     ['nap', 64],
     ['walkOut', Math.max(1, w + 1 - lx)],
+    ['walkIn', cx + SPRITE_W], // back from the left, to sit where the loop began
   ]
-  const total = segs.reduce((n, [, len]) => n + len, 0)
+  return { cx, lx, segs, total: segs.reduce((n, [, len]) => n + len, 0) }
+}
+
+/** Ticks in one loop of the routine at width `w`. */
+export const cycleLength = (w: number) => routine(w).total
+
+/**
+ * What she does at `tick`: a looping little routine sized to the width. The
+ * cat goes on `cv`, butterflies and marks (?, !, Zzz) on `fx`.
+ */
+export function stage(tick: number, w: number, cv: Canvas, fx: Canvas = cv): string {
+  const { cx, lx, segs, total } = routine(w)
   let t = ((tick % total) + total) % total
   let seg = segs[0]![0]
   for (const [name, len] of segs) {
@@ -279,12 +289,12 @@ export function stage(tick: number, w: number, cv: Canvas): string {
     case 'hunt': {
       const bx = cx + 24
       if (t < 24) {
-        drawButterfly(cv, Math.round(w + 2 - ((w + 2 - bx) * t) / 24), 5 + Math.round(2 * Math.sin(t * 0.6)), t & 1)
+        drawButterfly(fx, Math.round(w + 2 - ((w + 2 - bx) * t) / 24), 5 + Math.round(2 * Math.sin(t * 0.6)), t & 1)
         drawCat(cv, { kind: 'sit', eyesClosed: false, tail: (t >> 1) & 1 }, cx)
         return 'Watching'
       }
-      if (t < 44) drawButterfly(cv, bx, 6 + Math.round(Math.sin(t * 0.7)), t & 1)
-      else drawButterfly(cv, bx + (t - 44), 6 - (t - 44), t & 1)
+      if (t < 44) drawButterfly(fx, bx, 6 + Math.round(Math.sin(t * 0.7)), t & 1)
+      else drawButterfly(fx, bx + (t - 44), 6 - (t - 44), t & 1)
       if (t < 40) {
         drawCat(cv, { kind: 'crouch', wiggle: t & 1 }, cx)
         return 'Stalking'
@@ -295,7 +305,7 @@ export function stage(tick: number, w: number, cv: Canvas): string {
         return 'Pouncing'
       }
       drawCat(cv, { kind: 'sit', eyesClosed: false, tail: (t >> 2) & 1 }, lx)
-      if (t >= 54) cv.glyph(lx + 15, 0, '?', MARK)
+      if (t >= 54) fx.glyph(lx + 15, 0, '?', MARK)
       return 'Reconsidering'
     }
     case 'nap': {
@@ -305,14 +315,14 @@ export function stage(tick: number, w: number, cv: Canvas): string {
       }
       if (t >= 56) {
         drawCat(cv, { kind: 'sit', eyesClosed: false, tail: 1 }, lx)
-        cv.glyph(lx + 15, 0, '!', MARK)
+        fx.glyph(lx + 15, 0, '!', MARK)
         return 'Eureka'
       }
       drawCat(cv, { kind: 'loaf', breath: (t >> 3) & 1 }, lx)
       for (let k = 0; k < 3; k++) {
         const ph = (t + k * 6) % 18
         const up = Math.floor(ph / 6)
-        cv.glyph(lx + 19 + up, 3 - up, up === 2 ? 'Z' : 'z', SNORE)
+        fx.glyph(lx + 19 + up, 3 - up, up === 2 ? 'Z' : 'z', SNORE)
       }
       return 'Dreaming'
     }
