@@ -1,0 +1,274 @@
+[
+  {
+    "theme": "light",
+    "id": "sit",
+    "frames": 44,
+    "blocks": 152064,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 16.693719078173167,
+      "black": 19.633867126865386,
+      "grey": 16.285544366182304,
+      "calico": 16.312154062978248,
+      "siamese": 15.930301954638615,
+      "golden": 11.628013222109656
+    }
+  },
+  {
+    "theme": "light",
+    "id": "chase",
+    "frames": 19,
+    "blocks": 65664,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      15,
+      16,
+      17
+    ],
+    "minContrast": {
+      "tabby": 16.693719078173167,
+      "black": 19.633867126865386,
+      "grey": 16.285544366182304,
+      "calico": 16.312154062978248,
+      "siamese": 15.930301954638615,
+      "golden": 11.628013222109656
+    }
+  },
+  {
+    "theme": "light",
+    "id": "sleep",
+    "frames": 12,
+    "blocks": 41472,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 16.693719078173167,
+      "black": 19.633867126865386,
+      "grey": 16.285544366182304,
+      "calico": 16.312154062978248,
+      "siamese": 15.930301954638615,
+      "golden": 11.628013222109656
+    }
+  },
+  {
+    "theme": "light",
+    "id": "typing",
+    "frames": 6,
+    "blocks": 20736,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 16.693719078173167,
+      "black": 19.633867126865386,
+      "grey": 16.285544366182304,
+      "calico": 16.312154062978248,
+      "siamese": 15.930301954638615,
+      "golden": 11.628013222109656
+    }
+  },
+  {
+    "theme": "light",
+    "id": "stretch",
+    "frames": 15,
+    "blocks": 51840,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 16.693719078173167,
+      "black": 19.633867126865386,
+      "grey": 16.285544366182304,
+      "calico": 16.312154062978248,
+      "siamese": 15.930301954638615,
+      "golden": 11.628013222109656
+    }
+  },
+  {
+    "theme": "light",
+    "id": "startle",
+    "frames": 14,
+    "blocks": 48384,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      15,
+      16,
+      17
+    ],
+    "minContrast": {
+      "tabby": 16.693719078173167,
+      "black": 19.633867126865386,
+      "grey": 16.285544366182304,
+      "calico": 16.312154062978248,
+      "siamese": 15.930301954638615,
+      "golden": 11.628013222109656
+    }
+  },
+  {
+    "theme": "dark",
+    "id": "sit",
+    "frames": 44,
+    "blocks": 152064,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 9.885955974964773,
+      "black": 10.089443037512147,
+      "grey": 11.536303139546014,
+      "calico": 10.39488821072354,
+      "siamese": 10.674221360880878,
+      "golden": 12.268524644784428
+    }
+  },
+  {
+    "theme": "dark",
+    "id": "chase",
+    "frames": 19,
+    "blocks": 65664,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      15,
+      16,
+      17
+    ],
+    "minContrast": {
+      "tabby": 9.885955974964773,
+      "black": 10.089443037512147,
+      "grey": 11.536303139546014,
+      "calico": 10.39488821072354,
+      "siamese": 10.674221360880878,
+      "golden": 12.268524644784428
+    }
+  },
+  {
+    "theme": "dark",
+    "id": "sleep",
+    "frames": 12,
+    "blocks": 41472,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 9.885955974964773,
+      "black": 10.089443037512147,
+      "grey": 11.536303139546014,
+      "calico": 10.39488821072354,
+      "siamese": 10.674221360880878,
+      "golden": 12.268524644784428
+    }
+  },
+  {
+    "theme": "dark",
+    "id": "typing",
+    "frames": 6,
+    "blocks": 20736,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 9.885955974964773,
+      "black": 10.089443037512147,
+      "grey": 11.536303139546014,
+      "calico": 10.39488821072354,
+      "siamese": 10.674221360880878,
+      "golden": 12.268524644784428
+    }
+  },
+  {
+    "theme": "dark",
+    "id": "stretch",
+    "frames": 15,
+    "blocks": 51840,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      17
+    ],
+    "minContrast": {
+      "tabby": 9.885955974964773,
+      "black": 10.089443037512147,
+      "grey": 11.536303139546014,
+      "calico": 10.39488821072354,
+      "siamese": 10.674221360880878,
+      "golden": 12.268524644784428
+    }
+  },
+  {
+    "theme": "dark",
+    "id": "startle",
+    "frames": 14,
+    "blocks": 48384,
+    "blurry": 0,
+    "wrong": 0,
+    "grounds": [
+      15,
+      16,
+      17
+    ],
+    "minContrast": {
+      "tabby": 9.885955974964773,
+      "black": 10.089443037512147,
+      "grey": 11.536303139546014,
+      "calico": 10.39488821072354,
+      "siamese": 10.674221360880878,
+      "golden": 12.268524644784428
+    }
+  },
+  {
+    "theme": "reduced",
+    "id": "sit",
+    "still": true,
+    "wrong": 0
+  },
+  {
+    "theme": "reduced",
+    "id": "chase",
+    "still": true,
+    "wrong": 0
+  },
+  {
+    "theme": "reduced",
+    "id": "sleep",
+    "still": true,
+    "wrong": 0
+  },
+  {
+    "theme": "reduced",
+    "id": "typing",
+    "still": true,
+    "wrong": 0
+  },
+  {
+    "theme": "reduced",
+    "id": "stretch",
+    "still": true,
+    "wrong": 0
+  },
+  {
+    "theme": "reduced",
+    "id": "startle",
+    "still": true,
+    "wrong": 0
+  }
+]

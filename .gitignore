@@ -2,3 +2,6 @@
 .shots/
 node_modules/
 proto/
+# written by the Claude Code engine when it loads a mod
+mods/*/.claude-plugin/types/
+mods/*/tsconfig.json

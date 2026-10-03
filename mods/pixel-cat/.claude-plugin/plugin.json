@@ -1,0 +1,7 @@
+{
+  "name": "pixel-cat",
+  "version": "0.1.0",
+  "description": "Replaces the thinking indicator with an animated 16x16 pixel-art cat; /meow changes its coat, speed and quiet mode.",
+  "author": { "name": "message2manit-max" },
+  "types": "./types/index.d.ts"
+}
