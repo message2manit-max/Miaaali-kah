@@ -144,11 +144,45 @@ function stars(seed, n, t, area) {
   }
   ctx.restore();
 }
+// Glows are drawn from cached radial sprites: far cheaper than building a gradient per call.
+var _sprites = new Map();
+function _colorKey(color) {
+  // Split "rgba(r,g,b,a)" into an opaque key (quantised) plus an alpha multiplier.
+  var m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/.exec(color);
+  if (m) {
+    var q = function (v) { return Math.min(255, Math.round(+v / 6) * 6); };
+    return { key: q(m[1]) + ',' + q(m[2]) + ',' + q(m[3]), a: m[4] === undefined ? 1 : +m[4] };
+  }
+  if (color.charAt(0) === '#') { var c = hexToRgb(color); return { key: c.join(','), a: 1 }; }
+  return { key: color, a: 1, raw: true };
+}
+function _sprite(kind, key, raw) {
+  var id = kind + '|' + key, cv = _sprites.get(id);
+  if (cv) return cv;
+  if (_sprites.size > 300) _sprites.clear();
+  cv = document.createElement('canvas');
+  var g = cv.getContext('2d'), col = raw ? key : 'rgb(' + key + ')', clear = raw ? 'rgba(0,0,0,0)' : 'rgba(' + key + ',0)';
+  if (kind === 'glow') {
+    cv.width = cv.height = 256;
+    var gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, col); gr.addColorStop(1, clear);
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  } else {
+    cv.width = 320; cv.height = 180;
+    var vg = g.createRadialGradient(160, 90, 180 * 0.35, 160, 90, 320 * 0.75);
+    vg.addColorStop(0, clear); vg.addColorStop(1, col);
+    g.fillStyle = vg; g.fillRect(0, 0, 320, 180);
+  }
+  _sprites.set(id, cv);
+  return cv;
+}
 function glow(x, y, r, color, a) {
-  fade(a === undefined ? 1 : a, function () {
-    ctx.fillStyle = rad(x, y, 0, r, [[0, color], [1, 'rgba(0,0,0,0)']]);
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
-  });
+  if (!(r > 0)) return;
+  var k = _colorKey(color), al = (a === undefined ? 1 : a) * k.a;
+  if (!(al > 0.002)) return;
+  ctx.save(); ctx.globalAlpha *= clamp(al);
+  ctx.drawImage(_sprite('glow', k.key, k.raw), x - r, y - r, r * 2, r * 2);
+  ctx.restore();
 }
 // Additive-looking glow using 'lighter' compositing.
 function bloom(x, y, r, color, a) {
@@ -209,12 +243,12 @@ function cloudRow(y, seed, t, tone, scale, count) {
     cloud(x, y + (hash(seed + 3, i) - 0.5) * 70, s, { base: o.base, shade: o.shade, shade2: o.shade2, rim: o.rim, seed: seed + i * 13 });
   }
 }
-// City skyline. o: { color, lit (window colour), seed, height, density, glow }
+// City skyline. o: { color, lit (window colour), seed, height, bw, density, rim, x0, x1 (horizontal span, default -40..W+40) }
 function city(y, o) {
   o = o || {};
   var seed = pick(o, 'seed', 3), col = o.color || '#2a2350', hmax = pick(o, 'height', 220), bw = pick(o, 'bw', 70);
-  var x = -40, i = 0;
-  while (x < W + 40) {
+  var x = pick(o, 'x0', -40), x1 = pick(o, 'x1', W + 40), i = 0;
+  while (x < x1) {
     var w = bw * (0.6 + hash(seed, i) * 0.9), h = hmax * (0.35 + hash(seed + 1, i) * 0.65);
     ctx.fillStyle = col; ctx.fillRect(x, y - h, w + 1, h + H);
     if (hash(seed + 7, i) > 0.7) { ctx.fillRect(x + w * 0.45, y - h - 26, 3, 26); }
@@ -335,9 +369,11 @@ function lensFlare(x, y, k, angle) {
   ctx.restore();
 }
 function vignette(k, color) {
-  ctx.save(); ctx.globalAlpha *= (k === undefined ? 0.55 : k);
-  ctx.fillStyle = rad(W / 2, H / 2, H * 0.35, W * 0.75, [[0, 'rgba(0,0,0,0)'], [1, color || 'rgba(8,4,20,1)']]);
-  ctx.fillRect(0, 0, W, H); ctx.restore();
+  var c = _colorKey(color || 'rgb(8,4,20)'), al = (k === undefined ? 0.55 : k) * c.a;
+  if (!(al > 0.002)) return;
+  ctx.save(); ctx.globalAlpha *= clamp(al);
+  ctx.drawImage(_sprite('vig', c.key, c.raw), 0, 0, W, H);
+  ctx.restore();
 }
 function letterbox(k) { if (!(k > 0)) return; var h = 64 * clamp(k); ctx.fillStyle = '#05030b'; ctx.fillRect(0, 0, W, h); ctx.fillRect(0, H - h, W, h); }
 function flash(k, color) { if (!(k > 0)) return; ctx.save(); ctx.globalAlpha *= clamp(k); ctx.fillStyle = color || '#ffffff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
@@ -353,8 +389,8 @@ function txt(str, x, y, size, o) {
   ctx.font = weight + ' ' + size + 'px ' + family;
   ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
   if (o.ls) { try { ctx.letterSpacing = o.ls + 'px'; } catch (e) {} }
-  if (o.glowColor) { ctx.shadowColor = o.glowColor; ctx.shadowBlur = size * 0.5; }
   if (o.shadow) { ctx.save(); ctx.fillStyle = o.shadow; ctx.shadowBlur = 0; ctx.fillText(str, x + size * 0.06, y + size * 0.07); ctx.restore(); }
+  if (o.glowColor) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineJoin = 'round'; ctx.strokeStyle = o.glowColor; ctx.globalAlpha *= 0.35; ctx.lineWidth = size * 0.5; ctx.strokeText(str, x, y); ctx.lineWidth = size * 0.28; ctx.strokeText(str, x, y); ctx.restore(); }
   if (o.stroke) { ctx.lineJoin = 'round'; ctx.lineWidth = o.sw || size * 0.16; ctx.strokeStyle = o.stroke; ctx.strokeText(str, x, y); }
   ctx.fillStyle = o.color || '#ffffff'; ctx.fillText(str, x, y);
   ctx.restore();
@@ -367,11 +403,11 @@ function txtWidth(str, size, o) {
 }
 // Typewriter reveal: k = 0..1
 function typeOn(str, x, y, size, k, o) { var n = Math.ceil(str.length * clamp(k) - 1e-6); if (n <= 0) return; txt(str.slice(0, n), x, y, size, o); }
-// Impact title: scales down from big, lands with a white flash ring. k = 0..1 (use ~0.5 s)
+// Impact title: scales down from big (o.from, default 2.4x), lands with a white flash ring. k = 0..1 (use ~0.5 s)
 function slam(str, x, y, size, k, o) {
   if (!(k > 0)) return;
   o = o || {};
-  var s = k < 1 ? lerp(2.4, 1, eo(k / 0.6)) : 1, a = clamp(k / 0.25);
+  var s = k < 1 ? lerp(pick(o, 'from', 2.4), 1, eo(k / 0.6)) : 1, a = clamp(k / 0.25);
   var land = seg(k, 0.55, 0.45);
   at(x, y, s, (o.rot || 0) * (1 - eo(k)), function () {
     fade(a, function () {

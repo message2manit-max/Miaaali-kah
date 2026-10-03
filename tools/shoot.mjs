@@ -2,6 +2,7 @@
 // Usage:
 //   node tools/shoot.mjs --label me --ids title,dario [--at 0.2,0.6,1] [--t 1.5,4] [--chars src/characters.js] [--only 03,04]
 //   node tools/shoot.mjs --label me --all            (every scene at --at fractions)
+//   add --hold 1.8 to stay on the scene past its end with a slow-voice factor (use --t 30 etc.)
 // Fractions in --at are of each scene's simulated length (1 = last frame). Output: .shots/<label>/<id>-<tag>.png
 import fs from 'node:fs';
 import path from 'node:path';
@@ -47,7 +48,9 @@ const width = +arg('--width', 1280);
     if (i < 0) { console.log('no scene with id', id); continue; }
     const shots = fr.map(f => ['f' + f, Math.max(0.05, lens[i] * f - (f >= 1 ? 0.15 : 0))]).concat(ts.map(t => ['t' + t, t]));
     for (const [tag, t] of shots) {
-      await page.evaluate(([i, t]) => window.storyFrame(i, t), [i, t]);
+      const hold = arg('--hold', null);
+      if (hold) await page.evaluate(([i, t, r]) => window.storyHold(i, t, r), [i, t, +hold]);
+      else await page.evaluate(([i, t]) => window.storyFrame(i, t), [i, t]);
       await page.waitForTimeout(40);
       const file = path.join(shotDir, `${String(i).padStart(2, '0')}-${id}-${tag}.png`);
       await stage.screenshot({ path: file });

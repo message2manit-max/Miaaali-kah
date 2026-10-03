@@ -80,7 +80,7 @@ function update(dt) {
   } else if (PL.state === 'gap') {
     if (PL.st >= GAP) { if (PL.line < sc.lines.length - 1) nextLine(); else { PL.state = 'tail'; PL.st = 0; } }
   } else if (PL.state === 'tail') {
-    if (S.t >= sc.min && PL.st >= (sc.tail === undefined ? TAIL : sc.tail)) goScene(S.i + 1, true);
+    if (!PL.hold && S.t >= sc.min && PL.st >= (sc.tail === undefined ? TAIL : sc.tail)) goScene(S.i + 1, true);
   }
 }
 function goScene(i, smooth) {
@@ -263,6 +263,8 @@ function simulate(i, t) {
   PL.playing = playing;
 }
 window.storyFrame = function (i, t) { PL.poster = false; simulate(i, t); PL.fade = 1; PL.prev = null; draw(performance.now()); };
+// Hold test: stay on scene i past its end, with the voice-speed factor `rate` (1.8 = a slow voice).
+window.storyHold = function (i, t, rate) { var r0 = rateK; rateK = rate || 1; PL.hold = true; PL.poster = false; simulate(i, t); PL.hold = false; rateK = r0; PL.fade = 1; PL.prev = null; draw(performance.now()); };
 window.storyFade = function (i, f) { simulate(i, 0.01); PL.prev = newState(Math.max(0, i - 1)); PL.prev.t = 30; PL.fade = f; draw(performance.now()); };
 window.storySceneLengths = function () {
   var out = [], pl = PL.playing; PL.playing = false;
