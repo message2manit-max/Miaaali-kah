@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Claude Was Made</title>
+<style>
+/*FONTS*/
+:root {
+  /* Layout: a cinema screen on a dark theatre wall: the 16:9 stage, an anime subtitle strip and a control rail beneath, the real numbers after. Single dark theme by choice. */
+  --bg: #0c0a16;
+  --surface: #17142a;
+  --surface-2: #211d3a;
+  --ink: #f3effc;
+  --muted: #aaa3c6;
+  --line: #2e2949;
+  --accent: #ff8a3d;
+  --accent-ink: #1a0d04;
+  --holo: #7df9ff;
+  --focus: #7df9ff;
+  --font-display: "Dela Gothic One", "Arial Black", Impact, sans-serif;
+  --font-body: "M PLUS Rounded 1c", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-weight: 500; font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; padding-block: 22px 56px; display: grid; gap: 18px; }
+.top h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.9rem, 5vw, 3.2rem); line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
+.top h1 span { color: var(--accent); }
+.top p { margin: 0.5rem 0 0; color: var(--muted); font-size: 1.02rem; max-width: 64ch; }
+
+.player { display: grid; gap: 10px; }
+.stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; background: #05030b; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--line), 0 24px 60px -24px rgba(255, 138, 61, 0.35); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.bigplay { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) skewX(-8deg); display: inline-flex; align-items: center; gap: 0.6em; border: 0; background: var(--accent); color: var(--accent-ink); font-family: var(--font-display); font-size: clamp(1rem, 3vw, 1.9rem); white-space: nowrap; padding: 0.5em 1.3em 0.5em 1em; border-radius: 4px; cursor: pointer; box-shadow: 6px 6px 0 #22182f, 0 0 40px rgba(255, 138, 61, 0.6); }
+.bigplay:hover { filter: brightness(1.08); }
+.bigplay svg { width: 1.1em; height: 1.1em; }
+.endcard { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.endcard button, .endcard a { font-family: var(--font-display); font-size: clamp(0.9rem, 2.2vw, 1.25rem); border: 0; background: #ffffff; color: #22182f; padding: 0.45em 1.1em; border-radius: 4px; cursor: pointer; text-decoration: none; transform: skewX(-8deg); box-shadow: 4px 4px 0 #22182f; }
+.endcard button.primary { background: var(--accent); color: var(--accent-ink); }
+
+.subs { margin: 0; min-height: 2.9em; display: flex; align-items: center; justify-content: center; text-align: center; background: var(--surface); border-radius: 8px; padding: 0.45em 1em; font-family: var(--font-body); font-weight: 800; font-size: clamp(1.05rem, 2.5vw, 1.55rem); line-height: 1.25; text-wrap: balance; color: #ffffff; text-shadow: 0 2px 0 #000, 0 0 12px rgba(0, 0, 0, 0.6); }
+.subs.hint { color: var(--muted); font-weight: 500; text-shadow: none; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.btn { font-family: var(--font-body); font-weight: 800; font-size: 0.95rem; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); padding: 0.5em 1em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45em; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-width: 7.2em; justify-content: center; }
+.btn svg { width: 1em; height: 1em; }
+.btn:focus-visible, .chap:focus-visible, select:focus-visible, input:focus-visible, .endcard button:focus-visible, .endcard a:focus-visible, .bigplay:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.voice { display: inline-flex; align-items: center; gap: 0.4em; font-weight: 800; font-size: 0.95rem; cursor: pointer; }
+.voice input { width: 1.1em; height: 1.1em; accent-color: var(--accent); }
+select { font-family: var(--font-body); font-size: 0.9rem; color: var(--ink); background: var(--surface-2); border: 2px solid var(--line); border-radius: 8px; padding: 0.42em 0.6em; max-width: 100%; min-width: 0; }
+.spacer { flex: 1 1 auto; }
+.chapters { display: grid; gap: 4px; width: 100%; }
+.chap { height: 12px; border: 0; padding: 0; border-radius: 3px; background: var(--line); cursor: pointer; position: relative; overflow: hidden; transform: skewX(-12deg); }
+.chap > span { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); }
+.chap.done > span { width: 100%; opacity: 0.55; }
+.status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 0.9rem; color: var(--muted); }
+.status b { color: var(--ink); }
+
+.notes { display: grid; gap: 18px; background: var(--surface); border-radius: 10px; padding: 22px clamp(16px, 3vw, 32px); border: 1px solid var(--line); }
+.notes h2 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.4rem, 3vw, 1.9rem); margin: 0; line-height: 1.15; }
+.notes h3 { font-size: 1.02rem; margin: 0 0 6px; font-weight: 800; color: var(--accent); }
+.notes p { margin: 0; max-width: 70ch; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 28px; }
+.cols > div { min-width: 0; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+th, td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; }
+td.num, th.num { text-align: right; padding-right: 0; white-space: nowrap; }
+td.num { font-weight: 800; }
+ol.timeline { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.small { font-size: 0.9rem; color: var(--muted); }
+.sources { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 0.92rem; overflow-wrap: anywhere; }
+a { color: var(--holo); }
+
+.player:fullscreen { background: #000; padding: 12px; align-content: center; }
+.player:fullscreen .stage { width: min(100%, calc((100vh - 170px) * 16 / 9)); margin: 0 auto; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <h1>How Claude <span>Was Made</span></h1>
+    <p>A three-minute anime about the people who started Anthropic, the research that shaped Claude, and how fast it all grew, told by Claude itself. Turn your sound on.</p>
+  </header>
+
+  <section class="player" id="player" aria-label="Animation player">
+    <div class="stage" id="stage">
+      <canvas id="cv" role="img" aria-label="Anime title scene: How Claude Was Made."></canvas>
+      <button class="bigplay" id="bigplay" type="button" aria-label="Play the story">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>
+        <span>Play the story</span>
+      </button>
+      <div class="endcard" id="endcard" hidden>
+        <button class="primary" id="again" type="button">Watch again</button>
+        <a href="#numbers">See the real numbers</a>
+      </div>
+    </div>
+    <p class="subs hint" id="subs" aria-live="polite">Press play and Claude will tell you the story. The words show up here too.</p>
+    <div class="chapters" id="chapters" role="group" aria-label="Chapters"></div>
+    <div class="controls">
+      <button class="btn primary" id="play" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="playicon" d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span id="playlabel">Play</span></button>
+      <button class="btn" id="restart" type="button">Start over</button>
+      <label class="voice" for="voiceOn"><input type="checkbox" id="voiceOn" checked> Narrator voice</label>
+      <select id="voiceSel" aria-label="Choose the narrator voice"></select>
+      <span class="spacer"></span>
+      <button class="btn" id="fs" type="button">Full screen</button>
+    </div>
+    <div class="status"><span id="chapLabel">Chapter <b>1</b></span><span id="voiceNote"></span></div>
+  </section>
+
+<!--NOTES-->
+</main>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>
