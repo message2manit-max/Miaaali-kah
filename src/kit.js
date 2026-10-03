@@ -243,7 +243,7 @@ function cloudRow(y, seed, t, tone, scale, count) {
     cloud(x, y + (hash(seed + 3, i) - 0.5) * 70, s, { base: o.base, shade: o.shade, shade2: o.shade2, rim: o.rim, seed: seed + i * 13 });
   }
 }
-// City skyline. o: { color, lit (window colour), seed, height, bw, density, rim, x0, x1 (horizontal span, default -40..W+40) }
+// City skyline. o: { color, lit (window colour), seed, height, bw, density, rim, x0, x1 (horizontal span, default -40..W+40), winW, winH, gapX, gapY (window grid) }
 function city(y, o) {
   o = o || {};
   var seed = pick(o, 'seed', 3), col = o.color || '#2a2350', hmax = pick(o, 'height', 220), bw = pick(o, 'bw', 70);
@@ -253,10 +253,12 @@ function city(y, o) {
     ctx.fillStyle = col; ctx.fillRect(x, y - h, w + 1, h + H);
     if (hash(seed + 7, i) > 0.7) { ctx.fillRect(x + w * 0.45, y - h - 26, 3, 26); }
     if (o.lit) {
-      ctx.fillStyle = o.lit;
-      for (var r = 0; r < h / 18 - 1; r++) for (var c = 0; c < w / 14 - 1; c++) {
-        if (hash(seed + i * 31 + r, c) > (o.density || 0.62)) ctx.fillRect(x + 6 + c * 14, y - h + 10 + r * 18, 6, 8);
+      var ww = pick(o, 'winW', 6), wh = pick(o, 'winH', 8), gx = pick(o, 'gapX', 14), gy = pick(o, 'gapY', 18);
+      ctx.beginPath();
+      for (var r = 0; r < h / gy - 1; r++) for (var c = 0; c < w / gx - 1; c++) {
+        if (hash(seed + i * 31 + r, c) > (o.density || 0.62)) ctx.rect(x + 6 + c * gx, y - h + 10 + r * gy, ww, wh);
       }
+      ctx.fillStyle = o.lit; ctx.fill();
     }
     if (o.rim) { ctx.fillStyle = o.rim; ctx.fillRect(x, y - h, w + 1, 3); }
     x += w + 2 + hash(seed + 2, i) * 10; i++;
@@ -407,7 +409,9 @@ function typeOn(str, x, y, size, k, o) { var n = Math.ceil(str.length * clamp(k)
 function slam(str, x, y, size, k, o) {
   if (!(k > 0)) return;
   o = o || {};
-  var s = k < 1 ? lerp(pick(o, 'from', 2.4), 1, eo(k / 0.6)) : 1, a = clamp(k / 0.25);
+  // start scale: o.from, else as big as possible (max 2.4x) while staying roughly on screen
+  var from = o.from !== undefined ? o.from : Math.max(1.12, Math.min(2.4, (W * 1.05) / Math.max(1, txtWidth(str, size, o))));
+  var s = k < 1 ? lerp(from, 1, eo(k / 0.6)) : 1, a = clamp(k / 0.25);
   var land = seg(k, 0.55, 0.45);
   at(x, y, s, (o.rot || 0) * (1 - eo(k)), function () {
     fade(a, function () {
