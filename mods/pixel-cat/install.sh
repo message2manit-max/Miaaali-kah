@@ -90,7 +90,9 @@ echo "updated the env block of $settings (backup: $settings.bak-pixel-cat)"
 if [ "${1:-}" != "--no-check" ]; then
   if command -v claude >/dev/null 2>&1; then
     echo 'claude -p "/meow":'
-    (cd "$HOME" && claude -p "/meow")
+    # Not from $HOME: there ~/.claude/settings.json also reads as project
+    # settings, which cannot set CLAUDE_CODE_PLUGIN_DIRS (a warning, no harm).
+    (cd "${TMPDIR:-/tmp}" && claude -p "/meow")
   else
     echo 'claude is not on PATH: run  claude -p "/meow"  to check.'
   fi
