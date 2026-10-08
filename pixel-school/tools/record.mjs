@@ -19,7 +19,7 @@ const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
 await page.goto('file://' + path.join(root, 'index.html'));
-await page.evaluate(() => window.STORY.capture(1));
+await page.evaluate(() => window.STORY.capture(2));
 const dur = await page.evaluate(() => window.STORY.duration);
 console.log(`duration ${dur.toFixed(2)}s`);
 const b64 = await page.evaluate(() => window.STORY.audio(48000));
@@ -30,7 +30,7 @@ const frames = Math.ceil(dur * fps);
 const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error',
   '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'png', '-i', '-',
   '-i', wav,
-  '-vf', 'scale=1920:1080:flags=neighbor,format=yuv420p',
+  '-vf', 'format=yuv420p',
   '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-tune', 'animation', '-profile:v', 'high', '-r', String(fps),
   '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
 const done = new Promise((res, rej) => ff.on('close', c => c === 0 ? res() : rej(new Error('ffmpeg exit ' + c))));

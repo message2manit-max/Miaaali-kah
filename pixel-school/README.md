@@ -1,6 +1,8 @@
 # The 5.5 Family Builds a School
 
-A 1:43 pixel-art cartoon. Opus 5.5 (the lead, in glasses and a suit) plans a school, Sonnet 5.5 (the chef) cooks the cement, and three Haiku 5.5 builders in hard hats finish every job before the sentence ends. The crew is drawn after the "Meet the 5.5 family" card.
+A 1:43 cartoon in a blocky, Minecraft-style 2.5D look. Every critter, block, tree and prop is built from shaded cubes. Opus 5.5 (the lead, in glasses and a suit) plans a school, Sonnet 5.5 (the chef) cooks the cement, and three Haiku 5.5 builders in hard hats finish every job before the sentence ends. The cast is only Claude critters (and one bug), drawn after the "Meet the 5.5 family" card.
+
+Motion is continuous: positions, walk cycles, blinks, jumps (with squash and stretch), poses and camera moves are all computed for the exact moment being drawn and rounded to real screen pixels, so the video is smooth at 60 fps. The day runs from morning to golden hour.
 
 Open `index.html` in a browser and press **Play the short**. It is one self-contained file with no build step needed to watch it. Every frame is drawn live on a canvas and the sound effects are synthesized with Web Audio, so there are no image or audio files.
 
@@ -23,10 +25,10 @@ Open `index.html` in a browser and press **Play the short**. It is one self-cont
 
 | File | What it does |
 | --- | --- |
-| `core.js` | Canvas, camera, pixel drawing, easing, the 5x7 and 3x5 bitmap fonts |
-| `sprites.js` | Opus, Sonnet, the Haikus, the kids and the bug, with poses and expressions |
-| `world.js` | Sky, hills, ground, block textures, props and the school's build schedule |
-| `fx.js` | Dust, sparkles, confetti, the fight cloud, speech bubbles and scene wipes |
+| `core.js` | Device-pixel renderer, smooth camera, the cube primitive, easing and jumps, bitmap fonts |
+| `sprites.js` | The cube critters: Opus, Sonnet, the Haikus, baby critters and the bug, with blended poses |
+| `world.js` | Sky through the day, voxel hills, the grass-block lawn, block cubes, props and the build schedule |
+| `fx.js` | Dust, cube crumbs, confetti, XP orbs, milestone toasts, the fight cloud, bubbles and wipes |
 | `audio.js` | All sound effects, synthesized live and rendered offline for the video |
 | `story.js` | The ten scenes, each a pure function of time, plus the reading pauses |
 | `player.js` | Playback, controls, chapters and the hooks used for recording |

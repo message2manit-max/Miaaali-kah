@@ -11,7 +11,7 @@ try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = requ
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const args = process.argv.slice(2);
 const opt = k => { const i = args.indexOf(k); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v; };
-const sceneId = opt('--scene'), k = +(opt('--k') || 1), outDir = path.join(root, '.shots');
+const sceneId = opt('--scene'), k = +(opt('--k') || 2), outDir = path.join(root, '.shots');
 const pageShot = args.includes('--page'); if (pageShot) args.splice(args.indexOf('--page'), 1);
 fs.mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch();

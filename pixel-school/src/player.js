@@ -1,5 +1,6 @@
 /* ---- player: playback clock, live sound, controls, and hooks for recording the video ---- */
-buildBG();
+buildCubes();
+buildLayers();
 const $ = id => document.getElementById(id);
 const ui = {
   big: $('bigplay'), bigLabel: $('bigplay-label'), play: $('play'), restart: $('restart'), scrub: $('scrub'),
@@ -49,7 +50,7 @@ function seek(t) { T = clamp(t, 0, DUR); resetSfx(); dirty = true; sync(); }
 function fitCanvas() {
   if (capture) return;
   const r = canvas.getBoundingClientRect();
-  const k = clamp(Math.ceil(r.width * (window.devicePixelRatio || 1) / VW), 1, 3);
+  const k = clamp(Math.ceil(r.width * (window.devicePixelRatio || 1) / VW), 1, 2);
   if (k !== K || canvas.width !== VW * k) { setK(k); dirty = true; }
 }
 function loop(now) {
@@ -110,16 +111,16 @@ fitCanvas();
 function portrait(id, draw) {
   const cv = $(id);
   if (!cv) return;
-  const saved = ctx, savedCam = Object.assign({}, cam);
-  ctx = cv.getContext('2d');
+  const saved = ctx, savedCam = Object.assign({}, cam), savedK = K;
+  ctx = cv.getContext('2d'); K = 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = '#F0EDE6'; ctx.fillRect(0, 0, cv.width, cv.height);
   draw();
-  ctx = saved; Object.assign(cam, savedCam);
+  ctx = saved; K = savedK; Object.assign(cam, savedCam);
 }
-portrait('pc-opus', () => { setCam(-16, -27, 3); drawOpus(0, 0, {}); });
-portrait('pc-sonnet', () => { setCam(-16, -29.4, 3); drawSonnet(0, 0, {}); });
-portrait('pc-haiku', () => { setCam(-16, -24, 3); drawHaiku('W', -10, 0, { item: 'clip' }); drawHaiku('B', 10, 0, { item: 'hammer' }); drawHaiku('Y', 0, 2, {}); });
+portrait('pc-opus', () => { setCam(-17.7, -32.2, 2.5); drawOpus(0, 0, {}); });
+portrait('pc-sonnet', () => { setCam(-14.6, -31.1, 2.8); drawSonnet(0, 0, {}); });
+portrait('pc-haiku', () => { setCam(-16.5, -27, 2.6); drawHaiku('W', -10, 0, { item: 'clip' }); drawHaiku('B', 10, 0, { item: 'hammer' }); drawHaiku('Y', 0, 2, {}); });
 // poster: the "BUILD A SCHOOL" ticket
 T = 5.8; renderAt(T); T = 0; sync();
 dirty = false;
@@ -142,6 +143,7 @@ window.STORY = {
   scenes: SCENES.map(s => ({ id: s.id, title: s.title, start: s.rstart, dur: s.rdur, story: s.start, holds: s.holds, lines: (s.lines || []).map(l => [l[0], l[1], l[2], l[3], lineCps(l)]) })),
   capture(k) { capture = true; playing = false; setK(k || 1); },
   frame(t) { renderAt(t); return canvas.toDataURL('image/png'); },
+  renderOnly(t) { renderAt(t); },
   sheet(scale, poses) { // close-up model sheet for checking the sprites
     beginFrame(); setCam(0, 0, scale || 8);
     S(0, 0, VW, VH, '#F0EDE6');

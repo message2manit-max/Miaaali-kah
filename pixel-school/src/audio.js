@@ -125,6 +125,13 @@ function sfx(ac, out, when, name, o = {}) {
     case 'squeak': tone(ac, out, when, { type: 'sine', f: 1700, f2: 2300, d: 0.12, v: 0.08, vib: [30, 120] }); break;
     case 'swoosh': hiss(ac, out, when, { f: 900, q: 1.2, v: 0.3, a: 0.05, d: 0.3, sweep: [[0.25, 2200]] }); break;
     case 'tick': hiss(ac, out, when, { ft: 'highpass', f: 3500, v: 0.18, d: 0.02 }); break;
+    case 'throw': hiss(ac, out, when, { f: 700, q: 1.4, v: 0.12, a: 0.03, d: 0.18, sweep: [[0.15, 1800]], off: n * 0.09 }); break;
+    case 'toast':
+      tone(ac, out, when, { type: 'square', f: 988, d: 0.12, v: 0.05 });
+      tone(ac, out, when + 0.1, { type: 'square', f: 1319, d: 0.35, v: 0.05 });
+      tone(ac, out, when + 0.1, { type: 'sine', f: 2637, d: 0.4, v: 0.05 });
+      break;
+    case 'xp': for (let i = 0; i < 7; i++) tone(ac, out, when + i * 0.11 + rnd(i) * 0.03, { type: 'sine', f: 1400 + i * 160 + rnd(i + 4) * 200, d: 0.12, v: 0.06 }); break;
     case 'think': tone(ac, out, when, { type: 'sine', f: n % 2 ? 660 : 880, d: 0.12, v: 0.06 }); break;
     case 'check': tone(ac, out, when, { type: 'square', f: 1320, d: 0.04, v: 0.05 }); tone(ac, out, when + 0.04, { type: 'square', f: 1760, d: 0.05, v: 0.05 }); break;
     case 'clap': hiss(ac, out, when, { f: 1400, q: 1.2, v: 0.5, d: 0.08, off: n * 0.17 }); break;
