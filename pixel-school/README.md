@@ -1,0 +1,42 @@
+# The 5.5 Family Builds a School
+
+A 1:43 pixel-art cartoon. Opus 5.5 (the lead, in glasses and a suit) plans a school, Sonnet 5.5 (the chef) cooks the cement, and three Haiku 5.5 builders in hard hats finish every job before the sentence ends. The crew is drawn after the "Meet the 5.5 family" card.
+
+Open `index.html` in a browser and press **Play the short**. It is one self-contained file with no build step needed to watch it. Every frame is drawn live on a canvas and the sound effects are synthesized with Web Audio, so there are no image or audio files.
+
+## Story (10 chapters)
+
+1. **Meet the crew**: the cast drops in, then ticket #55 lands: BUILD A SCHOOL.
+2. **The empty lot**: the Haikus shout "ON IT!!" and zoom off before the plan is finished.
+3. **The plan**: three steps on the board. "This meeting could've been an email."
+4. **Foundation**: Sonnet tastes the cement ("needs more gravel") and the Haikus pour it in one dash.
+5. **Walls**: flying bricks, one of them lands on Opus, and Sonnet places exactly one window, as scoped.
+6. **The bug**: a literal bug, a three-Haiku pile-up, and Sonnet's pot lid. "Bug fixed."
+7. **Roof and tower**: Opus ponders, then the Haikus stack into a tower and build the clock tower and bell.
+8. **Finishing touches**: red door, trees, a playground, the "5.5 ACADEMY" sign and the flag.
+9. **Opening day**: the bell rings, the kids arrive, and one asks where the cafeteria is. "...That's v2."
+10. **The end**: a team photo.
+
+## Source
+
+`src/` holds the parts. `node tools/build.mjs` assembles them into `index.html`.
+
+| File | What it does |
+| --- | --- |
+| `core.js` | Canvas, camera, pixel drawing, easing, the 5x7 and 3x5 bitmap fonts |
+| `sprites.js` | Opus, Sonnet, the Haikus, the kids and the bug, with poses and expressions |
+| `world.js` | Sky, hills, ground, block textures, props and the school's build schedule |
+| `fx.js` | Dust, sparkles, confetti, the fight cloud, speech bubbles and scene wipes |
+| `audio.js` | All sound effects, synthesized live and rendered offline for the video |
+| `story.js` | The ten scenes, each a pure function of time, plus the reading pauses |
+| `player.js` | Playback, controls, chapters and the hooks used for recording |
+
+Every scene is a pure function of time, so any frame can be rendered on demand. That makes seeking instant and the video recording frame-exact.
+
+## Tools
+
+- `node tools/record.mjs --fps 60` renders every frame in headless Chromium, renders the sound offline, and encodes a 1920x1080 MP4 with ffmpeg.
+- `node tools/shoot.mjs 12.5 40 --scene walls 3` saves PNG frames for review.
+- `node tools/sheet.mjs` draws a close-up model sheet of the characters.
+
+Fan-made and unofficial.

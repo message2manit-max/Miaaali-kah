@@ -1,0 +1,144 @@
+<title>The 5.5 Family Builds a School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tiny5&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one centered column; the player is the hero, chapters and cast sit under it like a game's pause menu. */
+:root {
+  --bg: #F0EDE6;        /* the warm card colour from the 5.5 family art */
+  --panel: #FFFFFF;
+  --ink: #1F1E1D;
+  --muted: #6F6A62;
+  --line: #D8D1C5;
+  --accent: #D97757;    /* Claude orange */
+  --accent-ink: #FFFFFF;
+  --hi: #F2B632;        /* hard-hat yellow */
+  --display: "Tiny5", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --px: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1B1917; --panel: #26231F; --ink: #F1ECE3; --muted: #A9A196; --line: #3A352F; --accent: #E58A6B; --accent-ink: #1B1917; --hi: #F2B632; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1B1917; --panel: #26231F; --ink: #F1ECE3; --muted: #A9A196; --line: #3A352F; --accent: #E58A6B; --accent-ink: #1B1917; --hi: #F2B632; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 28px; }
+.head { display: grid; gap: 8px; }
+.eyebrow { margin: 0; font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(32px, 5.6vw, 60px); line-height: 1.04; letter-spacing: 0.01em; text-wrap: balance; }
+.lede { margin: 0; max-width: 62ch; color: var(--muted); font-size: 17px; }
+h2 { margin: 0 0 12px; font-family: var(--display); font-weight: 400; font-size: 22px; letter-spacing: 0.04em; }
+
+/* player */
+.player { display: grid; gap: 12px; }
+.frame { position: relative; border: var(--px) solid var(--ink); box-shadow: 6px 6px 0 var(--ink); background: #F0EDE6; line-height: 0; }
+.frame:fullscreen { border: 0; box-shadow: none; background: #000; display: flex; align-items: center; justify-content: center; }
+.frame:fullscreen canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; max-width: 100%; cursor: pointer; image-rendering: auto; }
+.bigplay { position: absolute; left: 50%; top: 43%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 12px; padding: 12px 22px 12px 18px; white-space: nowrap; font-family: var(--display); font-weight: 400; font-size: clamp(16px, 2.6vw, 24px); line-height: 1; color: #FFFFFF; background: #D97757; border: var(--px) solid #1F1E1D; box-shadow: 4px 4px 0 #1F1E1D; cursor: pointer; }
+.bigplay:hover { background: #C8654A; }
+.bigplay:active { transform: translate(calc(-50% + 3px), calc(-50% + 3px)); box-shadow: 1px 1px 0 #1F1E1D; }
+.tri { width: 0; height: 0; border-left: 14px solid #FFFFFF; border-top: 9px solid transparent; border-bottom: 9px solid transparent; }
+.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn { width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; color: var(--ink); background: var(--panel); border: var(--px) solid var(--ink); box-shadow: 3px 3px 0 var(--ink); cursor: pointer; }
+.btn:hover { background: var(--hi); color: #1F1E1D; }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn svg { width: 20px; height: 20px; shape-rendering: crispEdges; fill: currentColor; }
+#play[data-state="play"] .i-pause, #play[data-state="pause"] .i-play { display: none; }
+#mute[data-state="on"] .i-off, #mute[data-state="off"] .i-on { display: none; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.track { position: relative; flex: 1 1 220px; min-width: 0; height: 44px; display: flex; align-items: center; }
+.ticks { position: absolute; left: 9px; right: 9px; top: 50%; height: 18px; transform: translateY(-50%); pointer-events: none; }
+.ticks i { position: absolute; top: 0; width: 3px; height: 18px; background: var(--ink); opacity: 0.35; }
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; background: transparent; cursor: pointer; --pct: 0%; }
+input[type="range"]::-webkit-slider-runnable-track { height: 18px; border: var(--px) solid var(--ink); background: linear-gradient(to right, var(--accent) var(--pct), var(--panel) var(--pct)); }
+input[type="range"]::-moz-range-track { height: 12px; border: var(--px) solid var(--ink); background: linear-gradient(to right, var(--accent) var(--pct), var(--panel) var(--pct)); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 26px; margin-top: -7px; background: var(--hi); border: var(--px) solid var(--ink); border-radius: 0; }
+input[type="range"]::-moz-range-thumb { width: 12px; height: 20px; background: var(--hi); border: var(--px) solid var(--ink); border-radius: 0; }
+.time { font-family: var(--display); font-weight: 400; font-size: 17px; font-variant-numeric: tabular-nums; min-width: 92px; text-align: center; }
+
+/* chapters */
+.chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.chap { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 9px 12px; text-align: left; font: inherit; font-size: 15px; color: var(--ink); background: var(--panel); border: 2px solid var(--line); cursor: pointer; }
+.chap:hover { border-color: var(--ink); }
+.chap[aria-current="true"] { border-color: var(--ink); box-shadow: 3px 3px 0 var(--accent); }
+.chap-n { font-family: var(--display); font-weight: 400; color: var(--accent); min-width: 1.2em; }
+.chap-t { min-width: 0; }
+.chap-time { font-family: var(--display); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* cast */
+.cast { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.card { display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: center; padding: 14px; background: var(--panel); border: 2px solid var(--line); }
+.card canvas { width: 84px; height: 84px; aspect-ratio: 1; cursor: default; image-rendering: pixelated; background: #F0EDE6; border: 2px solid var(--line); }
+.card h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 20px; }
+.card .role { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.card p { margin: 4px 0 0; font-size: 15px; color: var(--muted); }
+.notes { display: grid; gap: 6px; max-width: 72ch; color: var(--muted); font-size: 14px; }
+.notes p { margin: 0; }
+kbd { font-family: var(--display); font-size: 13px; padding: 1px 6px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); }
+@media (max-width: 560px) {
+  .time { min-width: 0; font-size: 14px; }
+  .track { order: 5; flex-basis: 100%; }
+  .chapters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .btn:active, .bigplay:active { transform: none; } }
+</style>
+<!--BODY-->
+<main class="wrap">
+  <header class="head">
+    <p class="eyebrow">A pixel short · <span id="runtime">1:44</span> · sound on</p>
+    <h1>The 5.5 Family Builds a School</h1>
+    <p class="lede">Opus draws up the plan, Sonnet cooks the cement, and three Haikus finish every job before the sentence ends. A playful cartoon about teamwork, scope creep and one very small bug.</p>
+  </header>
+
+  <section class="player" aria-label="Animation player">
+    <div class="frame" id="frame">
+      <canvas id="screen" width="960" height="540" aria-label="Pixel-art cartoon of the 5.5 family building a school"></canvas>
+      <button id="bigplay" class="bigplay" type="button"><span class="tri" aria-hidden="true"></span><span id="bigplay-label">Play the short</span></button>
+    </div>
+    <div class="controls">
+      <button id="play" class="btn" type="button" aria-label="Play" data-state="play">
+        <svg class="i-play" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="1" width="2" height="8"/><rect x="4" y="2" width="2" height="6"/><rect x="6" y="3" width="2" height="4"/><rect x="8" y="4" width="1" height="2"/></svg>
+        <svg class="i-pause" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="1" width="2" height="8"/><rect x="6" y="1" width="2" height="8"/></svg>
+      </button>
+      <button id="restart" class="btn" type="button" aria-label="Restart from the beginning">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="2" height="8"/><rect x="5" y="4" width="1" height="2"/><rect x="6" y="3" width="1" height="4"/><rect x="7" y="2" width="2" height="6"/></svg>
+      </button>
+      <div class="track">
+        <input type="range" id="scrub" min="0" max="96" step="0.01" value="0" aria-label="Seek through the short">
+        <div class="ticks" id="ticks"></div>
+      </div>
+      <span id="time" class="time">0:00 / 1:44</span>
+      <button id="mute" class="btn" type="button" aria-label="Mute" data-state="on">
+        <svg class="i-on" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="2" height="2"/><rect x="3" y="3" width="1" height="4"/><rect x="4" y="2" width="1" height="6"/><rect x="6" y="4" width="1" height="2"/><rect x="7" y="3" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="9" y="3" width="1" height="4"/></svg>
+        <svg class="i-off" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="2" height="2"/><rect x="3" y="3" width="1" height="4"/><rect x="4" y="2" width="1" height="6"/><rect x="6" y="3" width="1" height="1"/><rect x="7" y="4" width="1" height="2"/><rect x="8" y="3" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/></svg>
+      </button>
+      <button id="fs" class="btn" type="button" aria-label="Full screen">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="3" height="1"/><rect x="1" y="1" width="1" height="3"/><rect x="6" y="1" width="3" height="1"/><rect x="8" y="1" width="1" height="3"/><rect x="1" y="8" width="3" height="1"/><rect x="1" y="6" width="1" height="3"/><rect x="6" y="8" width="3" height="1"/><rect x="8" y="6" width="1" height="3"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section aria-labelledby="ch-h">
+    <h2 id="ch-h">Chapters</h2>
+    <div id="chapters" class="chapters"></div>
+  </section>
+
+  <section aria-labelledby="cast-h">
+    <h2 id="cast-h">The crew</h2>
+    <div class="cast">
+      <div class="card"><canvas id="pc-opus" width="96" height="96"></canvas><div><p class="role">The lead</p><h3>Opus 5.5</h3><p>Everyday intelligence. Owns the plan, points at the board, and takes one brick for the team.</p></div></div>
+      <div class="card"><canvas id="pc-sonnet" width="96" height="96"></canvas><div><p class="role">The chef</p><h3>Sonnet 5.5</h3><p>For well-scoped work. Cooks the cement and places exactly the one window in the ticket.</p></div></div>
+      <div class="card"><canvas id="pc-haiku" width="96" height="96"></canvas><div><p class="role">The builders</p><h3>Haiku 5.5 ×3</h3><p>Speed and efficiency. Done before you finish the sentence, and sometimes before they know what the job is.</p></div></div>
+    </div>
+  </section>
+
+  <footer class="notes">
+    <p>Keys: <kbd>Space</kbd> play or pause, <kbd>←</kbd> <kbd>→</kbd> skip 5 seconds, <kbd>M</kbd> mute, <kbd>F</kbd> full screen.</p>
+    <p>Fan-made. The crew is drawn after the Claude Code mascot in the “Meet the 5.5 family” card. Every frame is drawn live on a canvas, and the sound effects are synthesized in your browser, so the page has no image or audio files.</p>
+  </footer>
+</main>
+<script>
+/*SCRIPT*/
+</script>
