@@ -214,15 +214,16 @@ const DOOR = [8, 1, 3, 3];
 function inRect(c, r, [c0, r0, w, h]) { return c >= c0 && c < c0 + w && r >= r0 && r < r0 + h; }
 const SCHOOL = { blocks: [], windows: [], door: {}, sign: {}, bell: {}, clock: {}, pole: {}, flag: {}, decor: {} };
 function rectOf([c, r, w, h]) { return [bx(c), by(r + h - 1), w * BS, h * BS]; }
-function drawPane(wd, T) {
+function drawPane(wd, T, lit) {
   const [x0, y, W0, H0] = rectOf(wd.rect), a = T - wd.t;
   if (a < 0) return;
   const x = x0 + 1, W = W0 - 1, H = H0 - 1; // leave a one-unit reveal on the left and below
   const sc = a < 0.16 ? ease.back(a / 0.16) : 1;
   const cw = W * sc, ch = H * sc, ox = x + (W - cw) / 2, oy = y + (H - ch) / 2;
   R(ox, oy, cw, ch, '#F3EEE3');
-  R(ox + 1, oy + 1, cw - 2, ch - 2, '#7FC2E6');
+  R(ox + 1, oy + 1, cw - 2, ch - 2, lit ? mixHex('#7FC2E6', '#FFD98A', lit) : '#7FC2E6');
   if (sc < 1) return;
+  if (lit) { ctx.globalAlpha = 0.35 * lit; R(x - 3, y - 3, W + 6, H + 6, '#FFD98A'); ctx.globalAlpha = 1; }
   R(x + 1, y + 1, 1, H - 2, '#5E9CC0'); R(x + 1, y + H - 2, W - 2, 1, '#A9DCF2');
   for (let i = 0; i < 5; i++) R(x + 3 + i, y + 2 + 4 - i, 1, 1, '#D8F3FC');
   const shine = ((AMB * 0.25 + wd.rect[0] * 0.07) % 1.6) - 0.3;
@@ -250,23 +251,34 @@ function drawDoorPanel(T, open) {
   }
 }
 function drawSchool(T, o = {}) {
+  schoolShadow(T, 21);
+  for (const b of SCHOOL.blocks) placedBlock(b, T);
+  schoolOpenings(T, o);
+  schoolDetails(T, o);
+}
+function schoolShadow(T, cols, x0) {
+  if (T < SCHOOL.blocks[0].t) return;
+  ctx.globalAlpha = 0.18; R(x0 != null ? x0 : bx(-1), GS, cols * BS + 8, 3, '#1E3010'); ctx.globalAlpha = 1;
+}
+// a placed block drops the last few units into place
+function placedBlock(b, T, frontOnly) {
+  if (T < b.t) return;
+  const a = T - b.t;
+  const yOff = a < 0.12 ? -(1 - ease.out(a / 0.12)) * 5 : a < 0.24 ? Math.sin((a - 0.12) / 0.12 * Math.PI) * -0.8 : 0;
+  if (frontOnly) img(TEX[b.tex], b.x, b.y + yOff, 8, 8); else blockAt(b.x, b.y + yOff, b.tex);
+}
+// recessed openings, panes and the door
+function schoolOpenings(T, o, skip) {
   const S_ = SCHOOL;
-  // contact shadow on the lawn and the dark inside of any opening
-  if (T >= S_.blocks[0].t) { ctx.globalAlpha = 0.18; R(bx(-1), GS, 21 * BS + 8, 3, '#1E3010'); ctx.globalAlpha = 1; }
-  // blocks, bottom row first, left to right, so hidden faces get covered
-  for (const b of S_.blocks) {
-    if (T < b.t) continue;
-    const a = T - b.t;
-    const yOff = a < 0.12 ? -(1 - ease.out(a / 0.12)) * 5 : a < 0.24 ? Math.sin((a - 0.12) / 0.12 * Math.PI) * -0.8 : 0;
-    blockAt(b.x, b.y + yOff, b.tex);
-  }
-  // recessed openings, row by row as the wall grows around them
-  for (const wd of S_.windows) if (T < wd.t + 0.16) hole(wd.rect, T);
-  hole(DOOR, T, '#2E2522');
+  for (const wd of S_.windows) if (T < wd.t + 0.16 && !(skip && skip(wd.rect))) hole(wd.rect, T);
+  if (!(skip && skip(DOOR))) hole(DOOR, T, '#2E2522');
   hole([8, 11, 3, 1], T);
-  // flush panes, the door, sign letters, the clock and the bell
-  for (const wd of S_.windows) drawPane(wd, T);
-  drawDoorPanel(T, o.doorOpen);
+  for (const wd of S_.windows) if (!(skip && skip(wd.rect))) drawPane(wd, T, o.lit);
+  if (!(skip && skip(DOOR))) drawDoorPanel(T, o.doorOpen);
+}
+// the sign, the clock, the bell, the flag and the front step
+function schoolDetails(T, o) {
+  const S_ = SCHOOL;
   const sg = S_.sign;
   if (T >= sg.t0) {
     const str = '5.5 ACADEMY', x0 = Math.round(200 - wtextW(str) / 2);
@@ -365,6 +377,7 @@ function drawSign(x, label) {
   lines.forEach((ln, i) => wtext(ln, Math.round(x - wtextW(ln) / 2), G - 6 - 22 + i * 6, '#4A2E18'));
 }
 function drawCauldron(x, t, o = {}) {
+  if (o.hide) return;
   at(x, G);
   // campfire
   cube(-9, -2, 18, 2, 6, '#7A4B2A', '#94663F', '#5E381E');
@@ -409,19 +422,34 @@ function drawEasel(x, T, o = {}) {
   R(L, Tp, 68, 42, '#2E6DB4');
   for (let i = 0; i < 68; i += 6) R(L + i, Tp, 1, 42, '#3878C0');
   for (let i = 0; i < 42; i += 6) R(L, Tp + i, 68, 1, '#3878C0');
-  wtext('PLAN V1', L + 4, Tp + 4, '#FFFFFF');
+  wtext(o.v2 ? 'PLAN V2' : 'PLAN V1', L + 4, Tp + 4, '#FFFFFF');
   R(L + 4, Tp + 10, 30, 1, '#BFD8F2');
   const mx = L + 46, my = Tp + 6;
-  R(mx, my + 10, 18, 1, '#DCEBFA'); R(mx, my + 3, 1, 8, '#DCEBFA'); R(mx + 17, my + 3, 1, 8, '#DCEBFA'); R(mx, my + 3, 18, 1, '#DCEBFA');
-  R(mx + 7, my - 2, 1, 5, '#DCEBFA'); R(mx + 11, my - 2, 1, 5, '#DCEBFA'); R(mx + 7, my - 2, 5, 1, '#DCEBFA'); R(mx + 9, my - 5, 1, 3, '#DCEBFA');
-  R(mx + 8, my + 7, 3, 4, '#DCEBFA'); R(mx + 2, my + 5, 3, 2, '#DCEBFA'); R(mx + 13, my + 5, 3, 2, '#DCEBFA');
-  ['FOUNDATION', 'WALLS', 'ROOF+TOWER'].forEach((s, i) => {
+  if (o.v2) {
+    R(mx - 4, my + 10, 26, 1, '#DCEBFA'); R(mx - 4, my + 5, 1, 6, '#DCEBFA'); R(mx + 21, my + 5, 1, 6, '#DCEBFA'); R(mx - 4, my + 5, 6, 1, '#DCEBFA'); R(mx + 16, my + 5, 6, 1, '#DCEBFA');
+    R(mx + 1, my + 3, 15, 1, '#DCEBFA'); R(mx + 1, my + 3, 1, 8, '#DCEBFA'); R(mx + 15, my + 3, 1, 8, '#DCEBFA');
+    for (let k = 0; k < 4; k++) R(mx + 17 + k, my + 4 - Math.round(Math.sqrt(4 - (k - 1.5) * (k - 1.5))), 1, 1, '#FFE45C');
+    R(mx + 7, my - 2, 1, 5, '#DCEBFA'); R(mx + 10, my - 2, 1, 5, '#DCEBFA'); R(mx + 7, my - 2, 4, 1, '#DCEBFA'); R(mx - 2, my + 7, 2, 2, '#DCEBFA'); R(mx + 18, my + 7, 2, 2, '#DCEBFA');
+  } else {
+    R(mx, my + 10, 18, 1, '#DCEBFA'); R(mx, my + 3, 1, 8, '#DCEBFA'); R(mx + 17, my + 3, 1, 8, '#DCEBFA'); R(mx, my + 3, 18, 1, '#DCEBFA');
+    R(mx + 7, my - 2, 1, 5, '#DCEBFA'); R(mx + 11, my - 2, 1, 5, '#DCEBFA'); R(mx + 7, my - 2, 5, 1, '#DCEBFA'); R(mx + 9, my - 5, 1, 3, '#DCEBFA');
+    R(mx + 8, my + 7, 3, 4, '#DCEBFA'); R(mx + 2, my + 5, 3, 2, '#DCEBFA'); R(mx + 13, my + 5, 3, 2, '#DCEBFA');
+  }
+  (o.v2 ? ['2 WINGS', 'DOME+STAIRS', '9 ROOMS'] : ['FOUNDATION', 'WALLS', 'ROOF+TOWER']).forEach((s, i) => {
     const yy = Tp + 15 + i * 8, hl = o.hl != null ? clamp(1 - Math.abs(o.hl - i) * 1.4, 0, 1) : 0;
     if (hl > 0) { ctx.globalAlpha = hl; R(L + 2, yy - 2, 52, 9, '#D97757'); ctx.globalAlpha = 1; }
     R(L + 4, yy, 5, 5, '#FFFFFF'); R(L + 5, yy + 1, 3, 3, '#2E6DB4');
     if ((o.checks || 0) > i) { R(L + 5, yy + 2, 1, 1, '#7CE38B'); R(L + 6, yy + 3, 1, 1, '#7CE38B'); R(L + 7, yy + 1, 1, 2, '#7CE38B'); R(L + 8, yy, 1, 1, '#7CE38B'); }
     wtext(s, L + 11, yy, '#FFFFFF');
   });
+  if (o.approved) {
+    const s = o.approved < 0.12 ? 1.6 - ease.out(o.approved / 0.12) * 0.6 : 1;
+    const cx = L + 50, cy = Tp + 31, w = 36 * s, h = 9 * s;
+    ctx.globalAlpha = 0.92;
+    R(cx - w / 2, cy - h / 2, w, h, '#C8452F'); R(cx - w / 2 + 1, cy - h / 2 + 1, w - 2, h - 2, '#E9E3D5'); R(cx - w / 2 + 1.6, cy - h / 2 + 1.6, w - 3.2, h - 3.2, '#C8452F');
+    if (s <= 1.01) wtext('APPROVED', cx - 15.5, cy - 2.5, '#FFF3D6');
+    ctx.globalAlpha = 1;
+  }
 }
 function easelItem(x, i) { return [x - 34 + 52, G - 60 + 17 + i * 8]; }
 function drawLevel(x, y) { at(x, y); cube(-8, -3, 16, 3, 4, '#F2C230', '#FFD95E', '#C99A18'); p(-2, -3, 4, 2, '#BFF0B0'); p(-1 + Math.sin(AMB * 3) * 0.6, -3, 1, 1, '#FFFFFF'); }
@@ -431,9 +459,10 @@ function drawLid(x, y, t, wob) {
   cube(-8, -2, 16, 2, 10, '#5A5864', '#7A7884', '#45434D'); cube(-1, -4, 2, 2, 2, '#2D2B33');
 }
 // a Minecraft oak: log trunk and a leaf cube
-function drawTree(x, T, t0, big) {
-  if (T < t0) return;
-  const a = T - t0, sc = a < 0.25 ? ease.back(a / 0.25) : 1;
+function drawTree(x, T, t0, big, outT) {
+  if (T < t0 || (outT != null && T > outT + 0.22)) return;
+  const a = T - t0, sc = outT != null && T > outT ? 1 - ease.in((T - outT) / 0.22) : a < 0.25 ? ease.back(a / 0.25) : 1;
+  if (sc <= 0.02) return;
   const sway = Math.sin(AMB * 1.3 + x) * 0.4;
   at(x, G - 4, false, sc, sc);
   const H = big ? 22 : 16, Wd = big ? 30 : 24;
@@ -459,9 +488,10 @@ function drawFlowers(T, t0) {
     R(x, y - 2 * s, 1, 2 * s, '#3F9A3A'); R(x - 1 + sw, y - 4 * s, 3, 1, cols[i % 5]); R(x + sw, y - 5 * s, 1, 3 * s, cols[i % 5]); R(x + sw, y - 4 * s, 1, 1, '#FFE9A0');
   }
 }
-function drawSwing(x, T, t0) {
-  if (T < t0) return;
-  const a = T - t0, sc = a < 0.22 ? ease.back(a / 0.22) : 1;
+function drawSwing(x, T, t0, outT) {
+  if (T < t0 || (outT != null && T > outT + 0.22)) return;
+  const a = T - t0, sc = outT != null && T > outT ? 1 - ease.in((T - outT) / 0.22) : a < 0.22 ? ease.back(a / 0.22) : 1;
+  if (sc <= 0.02) return;
   at(x, G - 6, false, sc, sc);
   const H = 26;
   cube(-14, -H, 2, H, 2, '#C24B34'); cube(12, -H, 2, H, 2, '#C24B34');
@@ -474,9 +504,10 @@ function drawSwing(x, T, t0) {
     });
   }
 }
-function drawSlide(x, T, t0) {
-  if (T < t0) return;
-  const a = T - t0, sc = a < 0.22 ? ease.back(a / 0.22) : 1;
+function drawSlide(x, T, t0, outT) {
+  if (T < t0 || (outT != null && T > outT + 0.22)) return;
+  const a = T - t0, sc = outT != null && T > outT ? 1 - ease.in((T - outT) / 0.22) : a < 0.22 ? ease.back(a / 0.22) : 1;
+  if (sc <= 0.02) return;
   at(x, G - 6, false, sc, sc);
   const H = 22;
   cube(-13, -H, 2, H, 2, '#9AA0A6'); cube(-7, -H, 2, H, 2, '#9AA0A6');

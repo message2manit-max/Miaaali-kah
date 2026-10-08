@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const read = f => fs.readFileSync(path.join(root, 'src', f), 'utf8');
-const parts = ['core.js', 'sprites.js', 'world.js', 'fx.js', 'audio.js', 'story.js', 'player.js'];
+const parts = ['core.js', 'sprites.js', 'world.js', 'fx.js', 'audio.js', 'school2.js', 'rooms.js', 'story.js', 'story2.js', 'timeline.js', 'player.js'];
 const script = '(function () {\n\'use strict\';\n' + parts.map(p => `/* ==== ${p} ==== */\n` + read(p)).join('\n') + '\n})();';
 const shell = read('shell.html').replace('/*SCRIPT*/', () => script);
 const [head, body] = shell.split('<!--BODY-->');

@@ -379,7 +379,7 @@ const F3SRC = {
   0: '###|#.#|#.#|#.#|###', 1: '.#.|##.|.#.|.#.|###', 2: '##.|..#|.#.|#..|###', 3: '##.|..#|.#.|..#|##.',
   4: '#.#|#.#|###|..#|..#', 5: '###|#..|##.|..#|##.', 6: '.##|#..|###|#.#|###', 7: '###|..#|.#.|.#.|.#.',
   8: '###|#.#|###|#.#|###', 9: '###|#.#|###|..#|##.', '.': '.|.|.|.|#', '+': '...|.#.|###|.#.|...',
-  '-': '...|...|###|...|...', '!': '#|#|#|.|#', '?': '##.|..#|.#.|...|.#.', ':': '.|#|.|#|.', "'": '#|#|.|.|.',
+  '-': '...|...|###|...|...', '=': '...|###|...|###|...', '>': '#..|.#.|..#|.#.|#..', '!': '#|#|#|.|#', '?': '##.|..#|.#.|...|.#.', ':': '.|#|.|#|.', "'": '#|#|.|.|.',
 };
 function compileFont(src) {
   const out = {};
@@ -542,13 +542,24 @@ function drawOpus(x, y, o = {}) {
     else if (eyes === 'closed' || open < 0.3) p(ex, ey + 2, 4, 1, C.ink);
     else { const h = (eyes === 'up' ? 2 : 4) * open; p(ex + 1 + lk, ey + (eyes === 'up' ? 0 : (4 - h) / 2), 2, h, C.ink); }
   }
+  if (o.badge) {
+    const k = ease.back(clamp(o.badge, 0, 1));
+    if (k > 0.05) { p(-9 - 1.6 * k, -9.5, 3.2 * k, 1, C.gold); p(-9.5, -9 - 1.6 * k, 1, 3.2 * k, C.gold); p(-9.5, -9.5, 1, 1, '#FFF6D0'); }
+  }
   if (o.glint != null && o.glint > 0 && o.glint < 1) { const gx = o.glint * 5; p(-8 + gx - 1, -17, 1, 2, C.white); p(4 + gx - 1, -17 + tl, 1, 2, C.white); }
   opusArm(AR, 1);
-  if (o.item === 'roll') {
+  if (o.item === 'clipboard') {
+    cube(-29, -18, 9, 12, 2, C.wood, '#C08A55', C.woodD); p(-28, -16, 7, 9, C.white); p(-27, -19, 5, 1.5, C.steel);
+    for (let i = 0; i < 3; i++) { p(-27, -14.5 + i * 2.5, 1, 1, i < (o.checks || 0) ? '#3DA35D' : '#9AA0A6'); p(-25.5, -14.5 + i * 2.5, 4, 0.8, '#C9CDD2'); }
+  } else if (o.item === 'roll') {
     cube(-25, -14, 13, 3, 4, '#3A72B8', '#5C93D3', '#2A5590'); p(-25, -14, 1, 3, '#DCE8F5');
   } else if (o.item === 'sheet') {
     cube(-29, -21, 11, 9, 2, '#2E6DB4', '#4A86C9', '#1F4F86');
     p(-28, -19, 9, 1, '#BFD8F2'); p(-28, -17, 3, 4, '#BFD8F2'); p(-24, -17, 4, 2, '#BFD8F2'); p(-24, -14, 4, 1, '#BFD8F2');
+  }
+  if (o.stampOn != null) {
+    const hx = (AR.h[0] + AR.h[2] / 2) - 2, hy = AR.h[1] - 3;
+    cube(hx, hy, 4, 3, 4, '#C24B34', '#E8786A', '#8E3020'); cube(hx + 1, hy - 3, 2, 3, 2, C.wood);
   }
   if (o.pointTo) {
     const hx = x + (AR.h[0] + AR.h[2]) * st.sx, hy = yy + st.bob + (AR.h[1] + 2) * st.sy;
@@ -608,6 +619,8 @@ function drawSonnet(x, y, o = {}) {
   if (!mirrored) sonSleeve(SR, 1, sp !== 'kiss'); else sonSleeve(SL, -1, upL > 0.5);
   if (sp === 'up') {
     p(11, -17, 1, 7, C.spoon); p(10, -21, 3, 4, C.spoon); p(11, -22, 1, 1, C.spoon); p(12, -20, 1, 2, C.spoonD); p(10, -18, 1, 1, C.spoonD);
+  } else if (sp === 'trowel') {
+    p(11, -15, 1, 5, C.spoon); cube(9, -20, 5, 5, 2, '#B9BEC6', '#DDE1E6', '#8E949C'); p(10, -19, 1, 3, '#FFFFFF');
   } else if (sp === 'kiss') {
     cube(3, -10, 6, 2, 4, C.chef, C.white, C.chefSide); p(1, -11, 3, 2, C.skin);
   } else if (Array.isArray(sp)) {
@@ -688,13 +701,17 @@ function drawKid(x, y, o = {}) {
   const pc = PACKS[(o.pack || 0) % PACKS.length];
   const packFirst = SPF > 0; // the backpack sits behind the critter's back
   if (packFirst) cube(-6, -7, 2, 5, 4, pc);
-  cube(-4, -7, 8, 5, 6, C.skin);
+  const body = o.soot ? mixHex(C.skin, '#3A2A24', o.soot * 0.7) : C.skin;
+  cube(-4, -7, 8, 5, 6, body);
   p(-4, -5, 1, 1, pc);
   const lk = clamp(o.look || 0, -1, 1), open = eyeOpen(o, 7 + (o.pack || 0));
   if (o.eyes === 'happy') { p(-2, -5, 1, 1, C.ink); p(1, -5, 1, 1, C.ink); p(-3, -4, 1, 1, C.ink); p(2, -4, 1, 1, C.ink); }
   else if (open < 0.3) { p(-2, -5, 1, 1, C.ink); p(1, -5, 1, 1, C.ink); }
   else { p(-2 + lk, -6, 1, 2 * open, C.ink); p(1 + lk, -6, 1, 2 * open, C.ink); }
-  cube(4, -5, 1, 1, 2, C.skin);
+  const rz = o.raise || 0;
+  cube(4, -5 - 4 * rz, 1, 1 + 4 * rz * 0.6, 2, body);
+  if (o.goggles) { p(-4, -6.4, 8, 1.6, '#5FC8E8'); p(-3, -6.1, 1.6, 1, '#DFF6FF'); p(1, -6.1, 1.6, 1, '#DFF6FF'); }
+  if (o.book) { cube(-3, -4, 6, 3, 2, o.book, lite(o.book), dark(o.book)); p(-0.3, -4, 0.6, 3, '#FFFFFF'); }
   if (!packFirst) cube(-6, -7, 2, 5, 4, pc);
   anchor(id, x, yy + st.bob - 9);
 }
@@ -927,15 +944,16 @@ const DOOR = [8, 1, 3, 3];
 function inRect(c, r, [c0, r0, w, h]) { return c >= c0 && c < c0 + w && r >= r0 && r < r0 + h; }
 const SCHOOL = { blocks: [], windows: [], door: {}, sign: {}, bell: {}, clock: {}, pole: {}, flag: {}, decor: {} };
 function rectOf([c, r, w, h]) { return [bx(c), by(r + h - 1), w * BS, h * BS]; }
-function drawPane(wd, T) {
+function drawPane(wd, T, lit) {
   const [x0, y, W0, H0] = rectOf(wd.rect), a = T - wd.t;
   if (a < 0) return;
   const x = x0 + 1, W = W0 - 1, H = H0 - 1; // leave a one-unit reveal on the left and below
   const sc = a < 0.16 ? ease.back(a / 0.16) : 1;
   const cw = W * sc, ch = H * sc, ox = x + (W - cw) / 2, oy = y + (H - ch) / 2;
   R(ox, oy, cw, ch, '#F3EEE3');
-  R(ox + 1, oy + 1, cw - 2, ch - 2, '#7FC2E6');
+  R(ox + 1, oy + 1, cw - 2, ch - 2, lit ? mixHex('#7FC2E6', '#FFD98A', lit) : '#7FC2E6');
   if (sc < 1) return;
+  if (lit) { ctx.globalAlpha = 0.35 * lit; R(x - 3, y - 3, W + 6, H + 6, '#FFD98A'); ctx.globalAlpha = 1; }
   R(x + 1, y + 1, 1, H - 2, '#5E9CC0'); R(x + 1, y + H - 2, W - 2, 1, '#A9DCF2');
   for (let i = 0; i < 5; i++) R(x + 3 + i, y + 2 + 4 - i, 1, 1, '#D8F3FC');
   const shine = ((AMB * 0.25 + wd.rect[0] * 0.07) % 1.6) - 0.3;
@@ -963,23 +981,34 @@ function drawDoorPanel(T, open) {
   }
 }
 function drawSchool(T, o = {}) {
+  schoolShadow(T, 21);
+  for (const b of SCHOOL.blocks) placedBlock(b, T);
+  schoolOpenings(T, o);
+  schoolDetails(T, o);
+}
+function schoolShadow(T, cols, x0) {
+  if (T < SCHOOL.blocks[0].t) return;
+  ctx.globalAlpha = 0.18; R(x0 != null ? x0 : bx(-1), GS, cols * BS + 8, 3, '#1E3010'); ctx.globalAlpha = 1;
+}
+// a placed block drops the last few units into place
+function placedBlock(b, T, frontOnly) {
+  if (T < b.t) return;
+  const a = T - b.t;
+  const yOff = a < 0.12 ? -(1 - ease.out(a / 0.12)) * 5 : a < 0.24 ? Math.sin((a - 0.12) / 0.12 * Math.PI) * -0.8 : 0;
+  if (frontOnly) img(TEX[b.tex], b.x, b.y + yOff, 8, 8); else blockAt(b.x, b.y + yOff, b.tex);
+}
+// recessed openings, panes and the door
+function schoolOpenings(T, o, skip) {
   const S_ = SCHOOL;
-  // contact shadow on the lawn and the dark inside of any opening
-  if (T >= S_.blocks[0].t) { ctx.globalAlpha = 0.18; R(bx(-1), GS, 21 * BS + 8, 3, '#1E3010'); ctx.globalAlpha = 1; }
-  // blocks, bottom row first, left to right, so hidden faces get covered
-  for (const b of S_.blocks) {
-    if (T < b.t) continue;
-    const a = T - b.t;
-    const yOff = a < 0.12 ? -(1 - ease.out(a / 0.12)) * 5 : a < 0.24 ? Math.sin((a - 0.12) / 0.12 * Math.PI) * -0.8 : 0;
-    blockAt(b.x, b.y + yOff, b.tex);
-  }
-  // recessed openings, row by row as the wall grows around them
-  for (const wd of S_.windows) if (T < wd.t + 0.16) hole(wd.rect, T);
-  hole(DOOR, T, '#2E2522');
+  for (const wd of S_.windows) if (T < wd.t + 0.16 && !(skip && skip(wd.rect))) hole(wd.rect, T);
+  if (!(skip && skip(DOOR))) hole(DOOR, T, '#2E2522');
   hole([8, 11, 3, 1], T);
-  // flush panes, the door, sign letters, the clock and the bell
-  for (const wd of S_.windows) drawPane(wd, T);
-  drawDoorPanel(T, o.doorOpen);
+  for (const wd of S_.windows) if (!(skip && skip(wd.rect))) drawPane(wd, T, o.lit);
+  if (!(skip && skip(DOOR))) drawDoorPanel(T, o.doorOpen);
+}
+// the sign, the clock, the bell, the flag and the front step
+function schoolDetails(T, o) {
+  const S_ = SCHOOL;
   const sg = S_.sign;
   if (T >= sg.t0) {
     const str = '5.5 ACADEMY', x0 = Math.round(200 - wtextW(str) / 2);
@@ -1078,6 +1107,7 @@ function drawSign(x, label) {
   lines.forEach((ln, i) => wtext(ln, Math.round(x - wtextW(ln) / 2), G - 6 - 22 + i * 6, '#4A2E18'));
 }
 function drawCauldron(x, t, o = {}) {
+  if (o.hide) return;
   at(x, G);
   // campfire
   cube(-9, -2, 18, 2, 6, '#7A4B2A', '#94663F', '#5E381E');
@@ -1122,19 +1152,34 @@ function drawEasel(x, T, o = {}) {
   R(L, Tp, 68, 42, '#2E6DB4');
   for (let i = 0; i < 68; i += 6) R(L + i, Tp, 1, 42, '#3878C0');
   for (let i = 0; i < 42; i += 6) R(L, Tp + i, 68, 1, '#3878C0');
-  wtext('PLAN V1', L + 4, Tp + 4, '#FFFFFF');
+  wtext(o.v2 ? 'PLAN V2' : 'PLAN V1', L + 4, Tp + 4, '#FFFFFF');
   R(L + 4, Tp + 10, 30, 1, '#BFD8F2');
   const mx = L + 46, my = Tp + 6;
-  R(mx, my + 10, 18, 1, '#DCEBFA'); R(mx, my + 3, 1, 8, '#DCEBFA'); R(mx + 17, my + 3, 1, 8, '#DCEBFA'); R(mx, my + 3, 18, 1, '#DCEBFA');
-  R(mx + 7, my - 2, 1, 5, '#DCEBFA'); R(mx + 11, my - 2, 1, 5, '#DCEBFA'); R(mx + 7, my - 2, 5, 1, '#DCEBFA'); R(mx + 9, my - 5, 1, 3, '#DCEBFA');
-  R(mx + 8, my + 7, 3, 4, '#DCEBFA'); R(mx + 2, my + 5, 3, 2, '#DCEBFA'); R(mx + 13, my + 5, 3, 2, '#DCEBFA');
-  ['FOUNDATION', 'WALLS', 'ROOF+TOWER'].forEach((s, i) => {
+  if (o.v2) {
+    R(mx - 4, my + 10, 26, 1, '#DCEBFA'); R(mx - 4, my + 5, 1, 6, '#DCEBFA'); R(mx + 21, my + 5, 1, 6, '#DCEBFA'); R(mx - 4, my + 5, 6, 1, '#DCEBFA'); R(mx + 16, my + 5, 6, 1, '#DCEBFA');
+    R(mx + 1, my + 3, 15, 1, '#DCEBFA'); R(mx + 1, my + 3, 1, 8, '#DCEBFA'); R(mx + 15, my + 3, 1, 8, '#DCEBFA');
+    for (let k = 0; k < 4; k++) R(mx + 17 + k, my + 4 - Math.round(Math.sqrt(4 - (k - 1.5) * (k - 1.5))), 1, 1, '#FFE45C');
+    R(mx + 7, my - 2, 1, 5, '#DCEBFA'); R(mx + 10, my - 2, 1, 5, '#DCEBFA'); R(mx + 7, my - 2, 4, 1, '#DCEBFA'); R(mx - 2, my + 7, 2, 2, '#DCEBFA'); R(mx + 18, my + 7, 2, 2, '#DCEBFA');
+  } else {
+    R(mx, my + 10, 18, 1, '#DCEBFA'); R(mx, my + 3, 1, 8, '#DCEBFA'); R(mx + 17, my + 3, 1, 8, '#DCEBFA'); R(mx, my + 3, 18, 1, '#DCEBFA');
+    R(mx + 7, my - 2, 1, 5, '#DCEBFA'); R(mx + 11, my - 2, 1, 5, '#DCEBFA'); R(mx + 7, my - 2, 5, 1, '#DCEBFA'); R(mx + 9, my - 5, 1, 3, '#DCEBFA');
+    R(mx + 8, my + 7, 3, 4, '#DCEBFA'); R(mx + 2, my + 5, 3, 2, '#DCEBFA'); R(mx + 13, my + 5, 3, 2, '#DCEBFA');
+  }
+  (o.v2 ? ['2 WINGS', 'DOME+STAIRS', '9 ROOMS'] : ['FOUNDATION', 'WALLS', 'ROOF+TOWER']).forEach((s, i) => {
     const yy = Tp + 15 + i * 8, hl = o.hl != null ? clamp(1 - Math.abs(o.hl - i) * 1.4, 0, 1) : 0;
     if (hl > 0) { ctx.globalAlpha = hl; R(L + 2, yy - 2, 52, 9, '#D97757'); ctx.globalAlpha = 1; }
     R(L + 4, yy, 5, 5, '#FFFFFF'); R(L + 5, yy + 1, 3, 3, '#2E6DB4');
     if ((o.checks || 0) > i) { R(L + 5, yy + 2, 1, 1, '#7CE38B'); R(L + 6, yy + 3, 1, 1, '#7CE38B'); R(L + 7, yy + 1, 1, 2, '#7CE38B'); R(L + 8, yy, 1, 1, '#7CE38B'); }
     wtext(s, L + 11, yy, '#FFFFFF');
   });
+  if (o.approved) {
+    const s = o.approved < 0.12 ? 1.6 - ease.out(o.approved / 0.12) * 0.6 : 1;
+    const cx = L + 50, cy = Tp + 31, w = 36 * s, h = 9 * s;
+    ctx.globalAlpha = 0.92;
+    R(cx - w / 2, cy - h / 2, w, h, '#C8452F'); R(cx - w / 2 + 1, cy - h / 2 + 1, w - 2, h - 2, '#E9E3D5'); R(cx - w / 2 + 1.6, cy - h / 2 + 1.6, w - 3.2, h - 3.2, '#C8452F');
+    if (s <= 1.01) wtext('APPROVED', cx - 15.5, cy - 2.5, '#FFF3D6');
+    ctx.globalAlpha = 1;
+  }
 }
 function easelItem(x, i) { return [x - 34 + 52, G - 60 + 17 + i * 8]; }
 function drawLevel(x, y) { at(x, y); cube(-8, -3, 16, 3, 4, '#F2C230', '#FFD95E', '#C99A18'); p(-2, -3, 4, 2, '#BFF0B0'); p(-1 + Math.sin(AMB * 3) * 0.6, -3, 1, 1, '#FFFFFF'); }
@@ -1144,9 +1189,10 @@ function drawLid(x, y, t, wob) {
   cube(-8, -2, 16, 2, 10, '#5A5864', '#7A7884', '#45434D'); cube(-1, -4, 2, 2, 2, '#2D2B33');
 }
 // a Minecraft oak: log trunk and a leaf cube
-function drawTree(x, T, t0, big) {
-  if (T < t0) return;
-  const a = T - t0, sc = a < 0.25 ? ease.back(a / 0.25) : 1;
+function drawTree(x, T, t0, big, outT) {
+  if (T < t0 || (outT != null && T > outT + 0.22)) return;
+  const a = T - t0, sc = outT != null && T > outT ? 1 - ease.in((T - outT) / 0.22) : a < 0.25 ? ease.back(a / 0.25) : 1;
+  if (sc <= 0.02) return;
   const sway = Math.sin(AMB * 1.3 + x) * 0.4;
   at(x, G - 4, false, sc, sc);
   const H = big ? 22 : 16, Wd = big ? 30 : 24;
@@ -1172,9 +1218,10 @@ function drawFlowers(T, t0) {
     R(x, y - 2 * s, 1, 2 * s, '#3F9A3A'); R(x - 1 + sw, y - 4 * s, 3, 1, cols[i % 5]); R(x + sw, y - 5 * s, 1, 3 * s, cols[i % 5]); R(x + sw, y - 4 * s, 1, 1, '#FFE9A0');
   }
 }
-function drawSwing(x, T, t0) {
-  if (T < t0) return;
-  const a = T - t0, sc = a < 0.22 ? ease.back(a / 0.22) : 1;
+function drawSwing(x, T, t0, outT) {
+  if (T < t0 || (outT != null && T > outT + 0.22)) return;
+  const a = T - t0, sc = outT != null && T > outT ? 1 - ease.in((T - outT) / 0.22) : a < 0.22 ? ease.back(a / 0.22) : 1;
+  if (sc <= 0.02) return;
   at(x, G - 6, false, sc, sc);
   const H = 26;
   cube(-14, -H, 2, H, 2, '#C24B34'); cube(12, -H, 2, H, 2, '#C24B34');
@@ -1187,9 +1234,10 @@ function drawSwing(x, T, t0) {
     });
   }
 }
-function drawSlide(x, T, t0) {
-  if (T < t0) return;
-  const a = T - t0, sc = a < 0.22 ? ease.back(a / 0.22) : 1;
+function drawSlide(x, T, t0, outT) {
+  if (T < t0 || (outT != null && T > outT + 0.22)) return;
+  const a = T - t0, sc = outT != null && T > outT ? 1 - ease.in((T - outT) / 0.22) : a < 0.22 ? ease.back(a / 0.22) : 1;
+  if (sc <= 0.02) return;
   at(x, G - 6, false, sc, sc);
   const H = 22;
   cube(-13, -H, 2, H, 2, '#9AA0A6'); cube(-7, -H, 2, H, 2, '#9AA0A6');
@@ -1626,6 +1674,23 @@ function sfx(ac, out, when, name, o = {}) {
       tone(ac, out, when + 0.1, { type: 'sine', f: 2637, d: 0.4, v: 0.05 });
       break;
     case 'xp': for (let i = 0; i < 7; i++) tone(ac, out, when + i * 0.11 + rnd(i) * 0.03, { type: 'sine', f: 1400 + i * 160 + rnd(i + 4) * 200, d: 0.12, v: 0.06 }); break;
+    case 'poof':
+      hiss(ac, out, when, { ft: 'lowpass', f: 900, q: 0.7, v: 0.7, a: 0.005, d: 0.6, sweep: [[0.5, 200]] });
+      tone(ac, out, when, { type: 'sine', f: 140, f2: 40, d: 0.35, v: 0.5 });
+      break;
+    case 'drum':
+      if (n % 2 === 0) tone(ac, out, when, { type: 'sine', f: 150, f2: 45, glide: 0.12, d: 0.2, v: 0.55 });
+      else hiss(ac, out, when, { f: 1800, q: 0.8, v: 0.35, d: 0.12, off: n * 0.13 });
+      hiss(ac, out, when, { ft: 'highpass', f: 6000, v: 0.08, d: 0.04, off: n * 0.07 });
+      break;
+    case 'type': hiss(ac, out, when + rnd(n) * 0.05, { ft: 'bandpass', f: 2600 + rnd(n + 3) * 1200, q: 3, v: 0.18, d: 0.03, off: n * 0.11 }); break;
+    case 'chalk': tone(ac, out, when, { type: 'sawtooth', f: 2400, f2: 2900, glide: 0.18, d: 0.2, v: 0.025, vib: [40, 200] }); break;
+    case 'firework':
+      tone(ac, out, when, { type: 'sine', f: 600, f2: 1800, glide: 0.55, d: 0.6, v: 0.06 });
+      hiss(ac, out, when + 0.6, { ft: 'lowpass', f: 1200, v: 0.55, d: 0.7, sweep: [[0.6, 300]], off: n * 0.1 });
+      tone(ac, out, when + 0.6, { type: 'sine', f: 90, f2: 40, d: 0.4, v: 0.35 });
+      for (let i = 0; i < 6; i++) hiss(ac, out, when + 0.75 + i * 0.09 + rnd(n + i) * 0.05, { ft: 'highpass', f: 4000, v: 0.12, d: 0.03, off: i * 0.13 });
+      break;
     case 'think': tone(ac, out, when, { type: 'sine', f: n % 2 ? 660 : 880, d: 0.12, v: 0.06 }); break;
     case 'check': tone(ac, out, when, { type: 'square', f: 1320, d: 0.04, v: 0.05 }); tone(ac, out, when + 0.04, { type: 'square', f: 1760, d: 0.05, v: 0.05 }); break;
     case 'clap': hiss(ac, out, when, { f: 1400, q: 1.2, v: 0.5, d: 0.08, off: n * 0.17 }); break;
@@ -1659,6 +1724,365 @@ function scriptSfx(scene) {
     }
   }
   return ev;
+}
+
+/* ==== school2.js ==== */
+/* ---- School V2: two new wings, Sonnet's complex parts (arched windows, a glass dome, the grand staircase),
+        scaffolding, and the dollhouse cutaway that opens the front wall to show every room ---- */
+const ARCHES = [ // [col, bottomRow, w, h]
+  [-10, 2, 2, 2], [-7, 2, 2, 2], [-4, 2, 2, 2], [-10, 5, 2, 2], [-7, 5, 2, 2], [-4, 5, 2, 2],
+  [21, 2, 2, 2], [24, 2, 2, 2], [27, 2, 2, 2], [21, 5, 2, 2], [24, 5, 2, 2], [27, 5, 2, 2],
+];
+const SCHOOL2 = { blocks: [], arches: [], dome: [], all: [], chimneyT: 1e9, scaffold: [1e9, 1e9] };
+const isWallRow = r => (r >= 1 && r <= 3) || r === 5 || r === 6;
+const isRemovable = b => isWallRow(b.r) && b.c > -12 && b.c < 30;
+const DOME = { cx: 328, base: () => by(9) - 4, rows: [34, 30, 25, 19, 11], h: 3 };
+
+function planSchool2(st) {
+  const B = [];
+  const wing = (c0, c1, side) => {
+    for (let r = 0; r <= 9; r++) {
+      let a = c0, b = c1;
+      if (r === 0 || r === 7) { if (side < 0) a = c0 - 1; else b = c1 + 1; }
+      if (r === 9) { a = c0 + 1; b = c1 - 1; }
+      for (let c = a; c <= b; c++) {
+        if (SCHOOL.at[c + ',' + r]) continue;
+        if (isWallRow(r) && ARCHES.some(w => inRect(c, r, w))) continue;
+        const tex = r === 0 ? 'stone' : r === 4 ? 'trim' : r === 7 ? 'corn' : r >= 8 ? 'slate' : 'brick';
+        B.push({ tex, c, r, x: bx(c), y: by(r), side, kind: 'wing' });
+      }
+    }
+  };
+  wing(-12, -1, -1); wing(19, 30, 1);
+  B.push({ tex: 'stone', c: -9, r: 10, x: bx(-9), y: by(10), side: -1, kind: 'wing' }, { tex: 'stone', c: -9, r: 11, x: bx(-9), y: by(11), side: -1, kind: 'wing' });
+  const order = (a, b) => a.r - b.r || (a.side < 0 ? b.c - a.c : a.c - b.c);
+  const Lw = B.filter(b => b.side < 0).sort(order), Rw = B.filter(b => b.side > 0).sort(order);
+  const t0 = st.wings + 0.8, dur = 4.6, flight = 0.5;
+  Lw.forEach((b, i) => { b.t0 = t0 + i / Lw.length * dur; b.t = b.t0 + flight; b.fx = 18 + (i % 2) * 12; b.fy = G - 20; b.arc = 18 + (9 - b.r) * 1.5; b.who = i % 2; });
+  Rw.forEach((b, i) => { b.t0 = t0 + 0.05 + i / Rw.length * dur; b.t = b.t0 + flight; b.fx = 372; b.fy = G - 20; b.arc = 18 + (9 - b.r) * 1.5; b.who = 2; });
+  SCHOOL2.blocks = B;
+  for (const b of B) SCHOOL.at[b.c + ',' + b.r] = b;
+  SCHOOL2.all = SCHOOL.blocks.concat(B).sort((a, b) => a.r - b.r || a.c - b.c);
+  SCHOOL2.dome = DOME.rows.map((w, i) => ({ w, t: st.wings + 6.1 + i * 0.62 }));
+  SCHOOL2.arches = ARCHES.map((rect, i) => ({ rect, t: st.wings + 9.55 + i * 0.085 }));
+  SCHOOL2.chimneyT = st.wings + 10.6;
+  SCHOOL2.scaffold = [st.wings + 5.0, st.wings + 10.3];
+  SCHOOL2.stairs = st.wings + 9.0;
+}
+
+// ---------- Sonnet's parts ----------
+function drawArch(a, T, lit) {
+  const [x0, y, W0, H0] = rectOf(a.rect), at_ = T - a.t;
+  if (at_ < 0) return;
+  const s = at_ < 0.18 ? ease.back(at_ / 0.18) : 1, x = x0 + 1, W = W0 - 1, H = H0 - 1, r = W / 2;
+  const glass = lit ? mixHex('#86C8EA', '#FFD98A', lit) : '#86C8EA';
+  for (let yy = 0; yy < H; yy++) {
+    const dy = r - yy, hw = yy < r ? Math.sqrt(Math.max(0, r * r - dy * dy)) : r;
+    const cy = y + (H - (H - yy) * s);
+    R(x + r - (hw + 0.6) * s, cy, (hw + 0.6) * 2 * s, 1, '#F7F2E8');
+    if (hw > 1.2) R(x + r - (hw - 0.8) * s, cy, (hw - 0.8) * 2 * s, 1, glass);
+  }
+  if (s < 1) return;
+  R(x + r - 0.5, y + 1, 1, H - 1, '#F7F2E8'); R(x + 1, y + H * 0.62, W - 2, 1, '#F7F2E8');
+  for (let i = 0; i < 4; i++) R(x + 3 + i, y + H - 4 - i, 1, 1, '#DDF4FC');
+  R(x - 1, y + H, W + 2, 1, '#F8F4EA'); R(x - 1, y + H + 1, W + 2, 1, '#BDB4A1');
+  if (lit) { ctx.globalAlpha = 0.3 * lit; R(x - 3, y - 2, W + 6, H + 5, '#FFD98A'); ctx.globalAlpha = 1; }
+}
+function drawDome(T) {
+  const base = DOME.base();
+  SCHOOL2.dome.forEach((row, i) => {
+    const a = T - row.t;
+    if (a < 0) return;
+    const s = a < 0.2 ? ease.back(a / 0.2) : 1, w = row.w * s, y = base - DOME.h * (i + 1);
+    at(DOME.cx, y + DOME.h);
+    cube(-w / 2, -DOME.h, w, DOME.h, 14 - i * 2, '#93D2EE', '#D2F0FB', '#5FA6CC');
+    for (let k = -w / 2 + 3; k < w / 2 - 1; k += 4) p(k, -DOME.h, 1, DOME.h, '#F2FAFE');
+    p(-w / 2, -1, w, 1, '#E8F6FC');
+  });
+  const top = SCHOOL2.dome[SCHOOL2.dome.length - 1];
+  if (T >= top.t + 0.2) {
+    const y = base - DOME.h * DOME.rows.length;
+    at(DOME.cx, y); cube(-1.5, -3, 3, 3, 3, C.gold, '#FFE08A', C.goldD);
+    const sh = ((AMB * 0.4) % 2) - 0.5;
+    if (sh > 0 && sh < 1) { ctx.globalAlpha = 0.5; for (let i = 0; i < 5; i++) R(DOME.cx - 16 + sh * 30 + i * 0.5, base - 3 - i * 3, 1.5, 3, '#FFFFFF'); ctx.globalAlpha = 1; }
+  }
+}
+function drawChimneySmoke(T) {
+  if (T < SCHOOL2.chimneyT) return;
+  const x = bx(-9) + 6, y = by(11) - 6;
+  for (let i = 0; i < 5; i++) {
+    const ph = (AMB * 0.45 + i / 5) % 1;
+    ctx.globalAlpha = 0.5 * (1 - ph) * clamp((T - SCHOOL2.chimneyT) / 0.5, 0, 1);
+    disc(x + Math.sin(AMB + i) * 2 + ph * 10, y - ph * 26, 2 + ph * 4, '#F4F0EA');
+    ctx.globalAlpha = 1;
+  }
+}
+function drawScaffold(T) {
+  const [a, b] = SCHOOL2.scaffold;
+  if (T < a - 0.3 || T > b + 0.4) return;
+  const s = T < a ? ease.back(clamp((T - a + 0.3) / 0.3, 0, 1)) : T > b ? 1 - clamp((T - b) / 0.4, 0, 1) : 1;
+  if (s <= 0) return;
+  const top = by(8) + 2, x0 = 298, x1 = 356, h = (G - 2 - top) * s;
+  at(0, 0);
+  for (const x of [x0, (x0 + x1) / 2, x1]) cube(x, G - 2 - h, 2, h, 2, '#C9A35E', '#DDBB78', '#9E7E44');
+  for (let yy = G - 2 - 12; yy > G - 2 - h; yy -= 14) { cube(x0, yy, x1 - x0 + 2, 1.5, 6, '#B38A48'); wline(x0 + 1, yy, (x0 + x1) / 2 + 1, yy - 12, 0.6, '#9E7E44'); }
+  if (s >= 1) cube(x0 - 2, top, x1 - x0 + 6, 2, 10, '#B98552', '#D29D68', '#8A5C33');
+}
+// the grand staircase (seen through the lobby once the front wall is open)
+function drawStairs(x0, yB, T) {
+  const a = T - SCHOOL2.stairs;
+  if (a < 0) return;
+  for (let k = 0; k < 7; k++) {
+    const s = clamp((a - k * 0.06) / 0.18, 0, 1);
+    if (s <= 0) continue;
+    at(x0 + 6 + k * 4, yB - 3 - k * 0.5, false, 1, s);
+    cube(0, -3 - k * 3, 6, 3 + k * 3, 6, '#B98552', '#D9A774', '#8A5C33');
+    p(0, -3 - k * 3, 6, 1, '#E8BC88');
+  }
+  at(0, 0); wline(x0 + 6, yB - 8, x0 + 34, yB - 30, 0.7, C.gold);
+}
+
+// ---------- the whole V2 building ----------
+// o.cut = { out, back }: story times when the front wall flies off, and when it flies back
+function cutState(b, T, cut) {
+  if (!cut || !isRemovable(b)) return 0;
+  const w = (b.x - 20) / 360 * 1.2 + rnd(b.c * 7 + b.r) * 0.08;
+  const tout = cut.out + w, tback = cut.back != null ? cut.back + w : 1e9;
+  if (T < tout) return 0;
+  if (T < tout + 0.5) return (T - tout) / 0.5;
+  if (T < tback - 0.4) return 1;
+  if (T < tback) return 1 - (T - (tback - 0.4)) / 0.4 * 0.999;
+  return 0;
+}
+function rectCut(rect, T, cut) {
+  if (!cut) return false;
+  const st = cutState({ c: rect[0], r: rect[1], x: bx(rect[0]) }, T, cut);
+  return st > 0;
+}
+function drawSchool2(T, o = {}) {
+  const cut = o.cut && T >= o.cut.out - 0.01 ? o.cut : null;
+  schoolShadow(T, 45, bx(-13));
+  const flying = [];
+  // structure first; with the front open, the wall pieces still standing are drawn after the rooms
+  for (const b of SCHOOL2.all) {
+    if (T < b.t) continue;
+    if (cut && isRemovable(b)) continue;
+    placedBlock(b, T);
+  }
+  if (cut) {
+    drawRooms(T, o);
+    for (const b of SCHOOL2.all) {
+      if (T < b.t || !isRemovable(b)) continue;
+      const st = cutState(b, T, cut);
+      if (st === 0) placedBlock(b, T, true);
+      else if (st < 1) flying.push([b, st]);
+    }
+  }
+  const skip = cut ? rect => rectCut(rect, T, cut) : null;
+  schoolOpenings(T, o, skip);
+  for (const a of SCHOOL2.arches) {
+    if (skip && skip(a.rect)) continue;
+    if (T < a.t + 0.16) hole(a.rect, T);
+    drawArch(a, T, o.lit);
+  }
+  schoolDetails(T, o);
+  drawDome(T);
+  drawChimneySmoke(T);
+  for (const [b, st] of flying) {
+    const u = ease.in(st), x = b.x - u * 6 * (b.c % 3 - 1), y = b.y + u * u * 40 - Math.sin(u * Math.PI) * 6;
+    ctx.globalAlpha = clamp(1.4 - u, 0, 1);
+    spin(x + 4, y + 4, u * (b.c % 2 ? 3 : -3), () => blockAt(x, y, b.tex));
+    ctx.globalAlpha = 1;
+  }
+}
+// thrown wing blocks in the air
+function drawFlying2(T) {
+  for (const b of SCHOOL2.blocks) {
+    if (b.t0 == null || T < b.t0 || T >= b.t) continue;
+    const u = (T - b.t0) / (b.t - b.t0);
+    const x = lerp(b.fx, b.x, u), y = lerp(b.fy, b.y, u) - b.arc * 4 * u * (1 - u);
+    spin(x + 4, y + 4, Math.sin(u * Math.PI) * 0.6 * (b.side < 0 ? 1 : -1), () => blockAt(x, y, b.tex));
+  }
+}
+
+/* ==== rooms.js ==== */
+/* ---- the rooms behind the front wall: built from cubes, each with its own furniture.
+        Story scenes add the occupants through o.occupants[roomId](room). ---- */
+const FLOOR_Y = { 1: [by(3), by(1) + BS], 2: [by(6), by(5) + BS] }; // [ceiling, floor] of each storey's front opening
+function mkRoom(id, floor, c0, c1, wall, flr, back, front) {
+  const [yT, yB] = FLOOR_Y[floor], x0 = bx(c0), x1 = bx(c1);
+  return { id, floor, x0, x1, yT, yB, W: x1 - x0, H: yB - yT, wall, flr, back, front,
+    // a point on the floor: u across the room, d into it (0 front, 16 back)
+    f(u, d) { return [x0 + u + d / 2, yB - d / 2]; },
+    // a point on the back wall: u across, h above the floor
+    w(u, h) { return [x0 + 8 + u, yB - 8 - h]; },
+    cx() { return (x0 + x1) / 2 + 4; }, cy() { return (yT + yB) / 2 - 2; } };
+}
+function plate(r, u, h, w, hh, col) { const [x, y] = r.w(u, h + hh); R(x, y, w, hh, col); return [x, y]; }
+function floorTiles(r, a, b, size) {
+  for (let i = 0; i < 8; i++) {
+    const y = r.yB - i - 1;
+    for (let u = -size; u < r.W + 8; u += size) {
+      const k = (Math.floor(u / size) + Math.floor(i / 2)) & 1;
+      R(r.x0 + u + i + 1, y, size, 1, k ? a : b);
+    }
+  }
+}
+function floorPlanks(r, col) {
+  for (let i = 0; i < 8; i++) {
+    const y = r.yB - i - 1, c = i % 2 ? col : shade(col, -0.06);
+    R(r.x0 + i + 1, y, r.W + 8, 1, c);
+    for (let u = (i * 7) % 13; u < r.W + 8; u += 13) R(r.x0 + i + 1 + u, y, 0.6, 1, shade(col, -0.2));
+  }
+}
+const mini = {
+  desk(x, y, w, col) { at(x, y); cube(0, -4, w || 8, 3, 6, col || '#B98552'); p(0.5, -1, 1, 1, '#6E4522'); p((w || 8) - 1.5, -1, 1, 1, '#6E4522'); },
+  shelf(x, y, w, h) {
+    at(x, y); cube(0, -h, w, h, 6, '#8A5C33', '#A87445', '#6E4522');
+    const cols = ['#C8452F', '#3D7DDB', '#3DAA5C', '#F2B632', '#9A5BD0', '#EE6FA8', '#2CB5B0'];
+    for (let row = 0; row < Math.floor(h / 4); row++) for (let k = 0; k < w - 2; k += 1.5) {
+      const c = cols[(Math.floor(k / 1.5) * 3 + row * 5) % cols.length], hh = 2.2 + rnd(k + row) * 0.8;
+      p(1 + k, -h + 1 + row * 4 + (3 - hh), 1.2, hh, c);
+    }
+  },
+  monitor(x, y, t, seed) {
+    at(x, y); cube(-4, -6, 8, 5, 2, '#2C2B30', '#45434D', '#1A1A1E'); p(-0.5, -1, 1, 1, '#2C2B30');
+    p(-3.2, -5.2, 6.4, 3.6, '#16181D');
+    p(-2.8, -4.8, 1, 0.6, '#D97757'); p(-2.2, -4.2, 0.6, 0.6, '#D97757');
+    const n = Math.floor((AMB * 3 + seed) % 5);
+    for (let i = 0; i < n; i++) p(-1.6 + i * 0.9, -4.5, 0.6, 0.5, i % 2 ? '#8FD0F0' : '#E8E4DC');
+    if (Math.sin(AMB * 8 + seed) > 0) p(-1.6 + n * 0.9, -4.6, 0.6, 0.8, '#D97757');
+    p(-2.8, -3.2, 3 + Math.sin(seed) * 1.5, 0.5, '#5E9CC0');
+  },
+  beaker(x, y, col, seed) {
+    at(x, y); p(-1.5, -5, 3, 5, '#DDEFF6'); p(-1.2, -3, 2.4, 2.8, col); p(-2, -5.4, 4, 0.6, '#BFDCE8');
+    for (let i = 0; i < 2; i++) { const ph = (AMB * 1.4 + i * 0.5 + seed) % 1; ctx.globalAlpha = 1 - ph; disc(x - 0.5 + i, y - 5.5 - ph * 5, 0.5 + ph * 0.6, shade(col, 0.3)); ctx.globalAlpha = 1; }
+  },
+  note(x, y, age, col) {
+    if (age < 0 || age > 1.6) return;
+    const u = age / 1.6, nx = x + Math.sin(age * 5) * 2, ny = y - u * 12;
+    ctx.globalAlpha = 1 - u * 0.8;
+    R(nx, ny, 1.4, 1.2, col); R(nx + 1, ny - 3.5, 0.5, 3.8, col); R(nx + 1, ny - 3.5, 1.5, 0.6, col);
+    ctx.globalAlpha = 1;
+  },
+};
+
+const ROOMS = [
+  mkRoom('caf', 1, -11, 0, '#F3E1C2', null,
+    (r, T) => {
+      floorTiles(r, '#ECE6DA', '#C9C2B6', 5);
+      const [bx_, by_] = plate(r, 34, 1.5, 48, 13, '#3B3A42');
+      wtext('TODAY: SOUP', bx_ + 3, by_ + 2, '#FFE9A8'); wtext('NOT CEMENT!', bx_ + 3, by_ + 8, '#F2A27E');
+      const [kx, ky] = r.f(4, 13); at(kx, ky); cube(0, -6, 26, 6, 6, '#C9CDD2', '#E8EBEE', '#9AA0A6');
+      at(kx + 12, ky - 6); cube(-5, -5, 10, 5, 6, '#3B3A42', '#56545F', '#28272D');
+      for (let i = 1; i < 3; i++) R(kx + 7 + i + 1, ky - 11 - i - 1, 8, 1, '#E0904A');
+      for (let i = 0; i < 2; i++) { const ph = (AMB * 0.6 + i / 2) % 1; ctx.globalAlpha = 0.4 * (1 - ph); disc(kx + 12 + i * 3, ky - 14 - ph * 8, 1 + ph * 2, '#FFFFFF'); ctx.globalAlpha = 1; }
+    },
+    (r, T) => { const [x, y] = r.f(30, 5); at(x, y); cube(0, -3, 50, 3, 8, '#C98E52', '#DDA56A', '#9E6C38'); for (let k = 0; k < 4; k++) { p(4 + k * 12, -4, 6, 1, '#E9E4DA'); p(6 + k * 12, -4.6, 2, 0.6, '#E0904A'); } }),
+  mkRoom('office', 1, 0, 7, '#D9C9A8', null,
+    (r, T) => {
+      floorPlanks(r, '#8A5C33');
+      for (let u = 0; u < r.W + 8; u += 6) { const [x, y] = r.w(u, 16); R(x, y, 0.6, 16, '#C9B691'); }
+      const [fx, fy] = plate(r, 4, 7, 14, 10, '#FFFFFF'); R(fx + 1, fy + 1, 12, 7, '#8EC8EC'); R(fx + 1, fy + 6, 12, 2, '#6DBE45'); R(fx + 5, fy + 3, 4, 3, '#E6D09E'); R(fx + 6, fy + 2, 2, 1, '#4E6884');
+      const [wx, wy] = plate(r, 26, 5, 14, 11, '#F3EEE3'); R(wx + 1, wy + 1, 12, 9, '#9FD3F2'); R(wx + 6.5, wy + 1, 1, 9, '#F3EEE3');
+      const [px, py] = r.f(44, 12); at(px, py); cube(-2, -3, 4, 3, 4, '#B65C47'); cube(-3, -9, 6, 6, 6, '#4FA03A', '#6CC04F', '#3B8430');
+    },
+    (r, T) => {
+      const [x, y] = r.f(10, 1.5); at(x, y); cube(0, -7, 30, 7, 6, '#6E4522', '#8A5C33', '#4E3018');
+      p(7, -5.5, 17, 5, C.gold); p(7, -5.5, 17, 0.6, '#FFE08A'); wtext('OPUS', x + 8, y - 5, '#4E3018');
+      at(x, y); cube(3, -10, 4, 3, 2, '#FFFFFF'); cube(22, -9, 4, 2, 2, '#F6F3EE');
+    }),
+  mkRoom('lobby', 1, 7, 12, '#EDE3CF', null,
+    (r, T) => {
+      floorTiles(r, '#D5D7D3', '#B9BCB7', 8);
+      const [bx_, by_] = plate(r, 2, 8, 30, 7, '#C24B34'); wtext('WELCOME', bx_ + 2, by_ + 1, '#FFF3D6');
+      drawStairs(r.x0 + 4, r.yB - 4, T);
+    },
+    (r, T) => { const [x, y] = r.f(30, 3); at(x, y); cube(-2, -4, 5, 4, 4, '#E9E3D5'); cube(-1.5, -7, 4, 3, 4, C.gold, '#FFE08A', C.goldD); }),
+  mkRoom('class', 1, 12, 19, '#CFE3D3', null,
+    (r, T) => {
+      floorPlanks(r, '#B98552');
+      const [bx_, by_] = plate(r, 12, 5, 32, 11, '#8A5C33'); R(bx_ + 1, by_ + 1, 30, 9, '#2F5D4A');
+      const solved = r.solved || 0;
+      wtext('1+1=' + (solved ? '2' : '?'), bx_ + 5, by_ + 3, '#F1F6EE');
+      if (solved) { R(bx_ + 23, by_ + 3, 1, 1, '#F2B632'); R(bx_ + 24, by_ + 4, 1, 1, '#F2B632'); R(bx_ + 25, by_ + 2, 1, 2, '#F2B632'); }
+      R(bx_ + 2, by_ + 9, 6, 0.6, '#FFFFFF');
+    },
+    (r, T) => { for (const [u, d] of [[18, 3], [34, 3]]) { const [x, y] = r.f(u, d); mini.desk(x, y, 9); } }),
+  mkRoom('lab', 1, 19, 30, '#DCE7F0', null,
+    (r, T) => {
+      floorTiles(r, '#F4F6F8', '#D8DEE4', 6);
+      const [sx_, sy_] = plate(r, 6, 10, 36, 7, '#3D7DDB'); wtext('SCIENCE!', sx_ + 2, sy_ + 1, '#FFFFFF');
+      for (let k = 0; k < 6; k++) { const [x, y] = r.w(52 + k * 4, 10); R(x, y, 3, 4, ['#E24B4B', '#F2B632', '#3DAA5C', '#9A5BD0', '#2CB5B0', '#EE6FA8'][k]); }
+    },
+    (r, T) => {
+      const [x, y] = r.f(10, 6); at(x, y); cube(0, -6, 64, 6, 8, '#3A3F45', '#555B63', '#2A2E33');
+      [['#7EDB3A', 8], ['#B07BE0', 22], ['#F2832E', 40], ['#2CB5B0', 54]].forEach(([c, u], i) => mini.beaker(x + u + 2, y - 6 - 2, c, i));
+    }),
+  mkRoom('art', 2, -11, 0, '#F6E6F0', null,
+    (r, T) => {
+      floorPlanks(r, '#D9B17E');
+      [['#E24B4B', 6, 4], ['#3D7DDB', 14, 6], ['#F2B632', 60, 3], ['#3DAA5C', 70, 5], ['#9A5BD0', 40, 6]].forEach(([c, u, h]) => { const [x, y] = r.w(u, h); disc(x, y, 1.6, c); });
+    },
+    (r, T) => {
+      for (const [u, d, portrait] of [[22, 7, true], [56, 7, false]]) {
+        const [x, y] = r.f(u, d); at(x, y);
+        cube(-5, -2, 1, 2, 1, C.woodD); cube(4, -2, 1, 2, 1, C.woodD);
+        cube(-6, -11, 12, 9, 2, '#FFFFFF', '#FFFFFF', '#D9D2C5');
+        if (portrait) { p(-4, -9, 8, 3, C.skin); p(-4, -6, 8, 3, C.suit); p(-4, -8, 8, 0.8, C.ink); p(-3, -8.6, 2, 2, C.ink); p(1, -8.6, 2, 2, C.ink); p(-0.4, -6, 0.8, 3, C.tie); }
+        else { disc(x - 2, y - 7, 2, '#3D7DDB'); disc(x + 2, y - 5, 1.6, '#F2B632'); p(-4, -9, 3, 1, '#E24B4B'); }
+      }
+    }),
+  mkRoom('library', 2, 0, 9, '#E8DCC4', null,
+    (r, T) => {
+      floorPlanks(r, '#9E3B3B');
+      for (const u of [2, 18, 34, 50]) { const [x, y] = r.f(u, 14); mini.shelf(x, y, 14, 9); }
+      const [sx_, sy_] = plate(r, 60, 3, 18, 6, '#FFFFFF'); wtext('SHHH', sx_ + 2, sy_ + 0.5, '#C24B34');
+    },
+    (r, T) => { const [x, y] = r.f(26, 2.5); at(x, y); cube(0, -3, 22, 3, 6, '#8A5C33', '#A87445', '#6E4522'); cube(3, -4, 5, 1, 4, '#3D7DDB'); cube(13, -4, 4, 1.5, 4, '#E24B4B'); }),
+  mkRoom('comp', 2, 9, 19, '#E3E6EA', null,
+    (r, T) => {
+      floorTiles(r, '#C9CDD2', '#B5BAC0', 7);
+      const [sx_, sy_] = plate(r, 36, 2, 26, 6, '#2C2B30'); wtext('> CODE', sx_ + 2, sy_ + 0.5, '#D97757');
+    },
+    (r, T) => { const [x, y] = r.f(6, 2); at(x, y); cube(0, -3, 66, 3, 6, '#9AA0A6', '#C9CDD2', '#6E747C'); for (let k = 0; k < 4; k++) mini.monitor(x + 9 + k * 16, y - 3, T, k * 1.7); }),
+  mkRoom('music', 2, 19, 30, '#FFF1C9', null,
+    (r, T) => {
+      floorPlanks(r, '#C98E52');
+      const [x, y] = r.f(6, 12); at(x, y); cube(0, -7, 22, 7, 8, '#1F1E1D', '#3A3836', '#121110');
+      for (let k = 0; k < 20; k += 1.5) R(x + 1 + k + 1, y - 7 - 1, 1, 1, '#FFFFFF');
+    },
+    (r, T) => {
+      const [x, y] = r.f(58, 6); at(x, y); cube(-5, -5, 10, 5, 8, '#C24B34', '#E8786A', '#8E3020'); p(-5, -3, 10, 0.8, '#F2D6A8');
+      cube(6, -9, 1, 9, 1, C.steel); cube(3, -9.5, 8, 0.8, 6, C.gold, '#FFE08A', C.goldD);
+    }),
+];
+const ROOM = {}; for (const r of ROOMS) ROOM[r.id] = r;
+const PARTITIONS = [[1, 0, 'office'], [1, 7, 'lobby'], [1, 12, 'class'], [1, 19, 'lab'], [2, 0, 'library'], [2, 9, 'comp'], [2, 19, 'music']];
+
+function drawRooms(T, o) {
+  for (const r of ROOMS) {
+    ctx.save();
+    const X = Math.round(sx(r.x0) * K), Y = Math.round(sy(r.yT) * K);
+    ctx.beginPath(); ctx.rect(X, Y, Math.round(sx(r.x1) * K) - X, Math.round(sy(r.yB) * K) - Y); ctx.clip();
+    R(r.x0, r.yT - 8, r.W + 8, r.H + 8, r.wall);
+    const [bx0, by0] = r.w(0, 0); R(bx0, by0 - 1, r.W, 1.2, shade(r.wall, -0.18));
+    r.back(r, T);
+    if (o.occupants && o.occupants[r.id]) o.occupants[r.id](r, T);
+    r.front(r, T);
+    if (o.occupantsFront && o.occupantsFront[r.id]) o.occupantsFront[r.id](r, T);
+    ctx.globalAlpha = 0.16; R(r.x0, r.yT, r.W + 8, 3, '#000000'); ctx.globalAlpha = 1;
+    if (o.lit) { ctx.globalAlpha = 0.18 * o.lit; R(r.x0, r.yT, r.W, r.H, '#FFC870'); ctx.globalAlpha = 1; }
+    ctx.restore();
+  }
+  for (const [fl, c, right] of PARTITIONS) {
+    const [yT, yB] = FLOOR_Y[fl];
+    ctx.save();
+    const X = Math.round(sx(bx(-12)) * K), Y = Math.round(sy(yT) * K);
+    ctx.beginPath(); ctx.rect(X, Y, Math.round(sx(bx(31)) * K) - X, Math.round(sy(yB) * K) - Y); ctx.clip();
+    at(0, 0); cube(bx(c) - 1, yT, 2, yB - yT, 16, '#E6D09E', '#F0E2BF', shade(ROOM[right].wall, -0.16));
+    ctx.restore();
+  }
 }
 
 /* ==== story.js ==== */
@@ -2043,14 +2467,21 @@ scene({
   lines: [
     L(0.2, 2.0, 'opus', 'PONDERING...', { think: true, cps: 12, silent: true }),
     L(2.25, 3.3, 'opus', 'IDEA: HAIKU TOWER!'),
+    L(5.5, 6.5, 'sonnet', 'PRECISION PARTS: MINE.'),
     L(9.1, 10.2, 'hY', 'WE MEANT TO DO THAT.'),
   ],
-  sfx: [[0.3, 'think'], [0.75, 'think', { n: 1 }], [1.2, 'think'], [1.65, 'think', { n: 1 }], [2.0, 'ding'], [3.3, 'boing'], [3.6, 'boing'], [3.9, 'boing'], [6.95, 'pop', { f: 500 }], [7.0, 'bell', { f: 880 }], [7.15, 'tick'], [7.45, 'tick'], [7.75, 'tick'], [8.35, 'place', { n: 4 }], [8.5, 'fall'], [9.0, 'thud'], [9.06, 'thud'], [9.2, 'tada']],
+  sfx: [[0.3, 'think'], [0.75, 'think', { n: 1 }], [1.2, 'think'], [1.65, 'think', { n: 1 }], [2.0, 'ding'], [3.3, 'boing'], [3.6, 'boing'], [3.9, 'boing'], [6.6, 'throw'], [6.66, 'throw', { n: 2 }], [6.95, 'pop', { f: 500 }], [6.97, 'twinkle'], [7.0, 'bell', { f: 880 }], [7.15, 'tick'], [7.45, 'tick'], [7.75, 'tick'], [8.35, 'place', { n: 4 }], [8.5, 'fall'], [9.0, 'thud'], [9.06, 'thud'], [9.2, 'tada']],
   draw(t, T) {
     camKF(t, [[0, 172, 112, 4.6], [2.2, 168, 110, 4.8, 'sine'], [3.3, 176, 104, 4.0, 'sine'], [4.6, 200, 72, 2.85, 'sine'], [8.4, 200, 70, 2.9], [9.2, 200, 96, 3.6, 'sine']]);
     world(T);
     drawCauldron(64, T);
-    drawSonnet(86, G, { flip: true, spoon: [14 + Math.cos(AMB * 9) * 2, -17 + Math.sin(AMB * 9)], eyes: t > 9.0 ? 'happy' : null, look: t > 4 ? -1 : 0 });
+    // Sonnet takes the precision parts: she tosses the clock face and the bell up to the tower
+    const sxp = kf(t, [[4.5, 86], [5.3, 108, 'sine']]);
+    const toss = ramp(t, 6.5, 6.75, 0.08);
+    drawSonnet(sxp, G, t < 4.5 ? { flip: true, spoon: [14 + Math.cos(AMB * 9) * 2, -17 + Math.sin(AMB * 9)], look: -1 } : { walk: win(t, 4.5, 5.3) ? t : null, spoon: 'trowel', armR: toss, armL: toss, look: 1, eyes: t > 7.0 ? 'happy' : null, ...jumpO(t, [[6.55, 0.22, 3]]) });
+    if (win(t, 6.6, 6.95)) { const u = (t - 6.6) / 0.35, x = lerp(sxp + 10, 200, u), y = lerp(G - 22, by(10) + 8, u) - 26 * 4 * u * (1 - u); disc(x, y, 5, '#2F3A4A'); disc(x, y, 4, '#F7F3EA'); }
+    if (win(t, 6.66, 7.0)) { const u = (t - 6.66) / 0.34, x = lerp(sxp + 10, 200, u), y = lerp(G - 22, by(11) + 4, u) - 30 * 4 * u * (1 - u); at(x, y + 3); cube(-2, -3, 4, 3, 3, C.gold, '#FFE08A', C.goldD); }
+    if (win(t, 6.95, 7.6)) twinkles(200, by(10) + 6, t, 6.95, 4, 9);
     drawOpus(150, G, { eyes: t < 2.0 ? 'up' : t > 8.5 && t < 9.0 ? 'wide' : null, armR: ramp(t, 2.05, 3.2), look: t > 3.3 ? 1 : 0, ...jumpO(t, [[2.0, 0.25, 3]]) });
     if (win(t, 2.0, 3.1)) bulb(150, G - 27, t - 2.0);
     const pre = [222, 234, 246];
@@ -2182,7 +2613,7 @@ scene({
 
 // ---------- 10. The photo ----------
 scene({
-  id: 'end', title: 'The end', dur: 4.4, noWipe: true, noTint: true,
+  id: 'photo1', title: 'Day one, done', dur: 4.4, noWipe: true, noTint: true,
   sfx: [[0.05, 'pageflip'], [1.0, 'tada'], [2.3, 'twinkle']],
   draw(t, T) {
     setCam(0, 0, 3);
@@ -2205,11 +2636,357 @@ scene({
     ctx.restore();
     textC('DAY ONE · 5.5 ACADEMY', 480, py + ph + 20, 2, '#3C3833');
     ctx.restore();
-    if (t > 1.0) { const s = ease.back(clamp((t - 1.0) / 0.3, 0, 1)); textC('THE END', 480, 466 + (1 - s) * 20, 4, '#1F1E1D'); }
-    if (t > 2.3) textC('COMING IN V2: THE CAFETERIA', 480, 510, 2, '#C4613F');
+    if (t > 1.0) { const s = ease.back(clamp((t - 1.0) / 0.3, 0, 1)); textC('DAY ONE: DONE!', 480, 466 + (1 - s) * 20, 4, '#1F1E1D'); }
+    if (t > 2.3) { const s = ease.back(clamp((t - 2.3) / 0.25, 0, 1)); textC('NEXT UP: SCHOOL V2', 480, 512 + (1 - s) * 12, 2, '#C4613F'); }
   },
 });
 
+
+/* ==== story2.js ==== */
+/* ---- V2: Principal Opus, Sonnet's complex parts, two new wings, a tour of every room, and a grand opening at dusk ---- */
+// before the wings go up the playground and trees stand where they did on day one; the Haikus move them outward
+function world2(T, o = {}) {
+  drawBackdrop();
+  walkers();
+  const d = SCHOOL.decor, mv = ST.wings + 0.45;
+  drawTree(100, T, d.trees, true, mv); drawTree(298, T, d.trees + 0.15, false, mv);
+  drawTree(-6, T, mv + 0.1, true); drawTree(408, T, mv + 0.2, false);
+  drawSchool2(T, o);
+  drawFlowers(T, d.flowers);
+  drawSwing(322, T, d.swing, mv); drawSlide(352, T, d.slide, mv);
+  drawSwing(440, T, mv + 0.25); drawSlide(470, T, mv + 0.3);
+  drawScaffold(T);
+  drawCauldron(64, T, { hide: T > mv });
+}
+function finish2(T, t, lines, o = {}) {
+  drawFlying2(T);
+  drawTint();
+  if (o.after) o.after();
+  drawBubbles(t, lines);
+}
+// a location title sliding in at the top left
+function caption(str, age, dur) {
+  dur = dur || 2.2;
+  if (age < 0 || age > dur + 0.4) return;
+  const u = ease.out(clamp(age / 0.3, 0, 1)), v = ease.in(clamp((age - dur) / 0.35, 0, 1));
+  const w = textW(str, 3) + 34, x = 16 - (1 - u) * (w + 20) - v * (w + 20), y = 16;
+  rbox(x + 4, y + 4, w, 40, 'rgba(0,0,0,0.25)'); rbox(x, y, w, 40, '#1F1E1D'); S(x + 3, y + 3, 6, 34, '#D97757');
+  text(str, x + 20, y + 10, 3, '#FFF6EC');
+}
+// the issue card that drops in
+function ticketCard(age, num, big, line, tags) {
+  if (age < 0) return;
+  const cy = kf(age, [[0, -200], [0.4, 70, 'in'], [0.54, 60, 'out'], [0.7, 70, 'in'], [1.3, 70], [1.55, -220, 'in']]);
+  const cw = 600, cx = 480 - cw / 2, ch = 132;
+  rbox(cx + 7, cy + 7, cw, ch, 'rgba(31,30,29,0.2)');
+  rbox(cx, cy, cw, ch, '#1F1E1D'); rbox(cx + 3, cy + 3, cw - 6, ch - 6, '#FFFFFF'); S(cx + 3, cy + 3, cw - 6, 6, '#D97757');
+  text(num, cx + 22, cy + 22, 2, '#8B857B');
+  let tx = cx + cw - 22;
+  for (const [s, bg] of tags) { tx -= textW(s, 2) + 16; rbox(tx, cy + 17, textW(s, 2) + 16, 24, bg); text(s, tx + 8, cy + 22, 2, '#FFFFFF'); tx -= 8; }
+  textC(big, 480, cy + 52, 5, '#D97757', '#1F1E1D');
+  textC(line, 480, cy + 100, 2, '#5E5850');
+}
+// rockets and bursts at dusk (world space, added light)
+function fireworks(t, list) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const [t0, x, y, col] of list) {
+    const a = t - t0;
+    if (a < 0 || a > 2.3) continue;
+    if (a < 0.6) {
+      const u = ease.out(a / 0.6), ry = lerp(G - 10, y, u);
+      for (let k = 0; k < 6; k++) { ctx.globalAlpha = 0.9 - k * 0.14; R(x - 0.7, ry + k * 2.2, 1.4, 2.2, k ? '#FFC870' : '#FFFFFF'); }
+    } else {
+      const b = a - 0.6, u = b / 1.7, spread = ease.out(Math.min(1, b * 1.5));
+      if (b < 0.25) { ctx.globalAlpha = 0.5 * (1 - b / 0.25); disc(x, y, 16, col); ctx.globalAlpha = 0.8 * (1 - b / 0.25); disc(x, y, 6, '#FFFFFF'); }
+      for (let i = 0; i < 32; i++) {
+        const an = i / 32 * Math.PI * 2, sp = 30 + (i % 4) * 7;
+        for (let k = 0; k < 3; k++) {
+          const sb = Math.max(0, spread - k * 0.06);
+          const px = x + Math.cos(an) * sp * sb, py = y + Math.sin(an) * sp * sb + b * b * 10;
+          ctx.globalAlpha = clamp(1 - u, 0, 1) * (1 - k * 0.3);
+          R(px - 1.2, py - 1.2, 2.4, 2.4, k ? col : '#FFFFFF');
+        }
+        if (u > 0.5 && Math.sin(AMB * 30 + i) > 0.6) { ctx.globalAlpha = 1 - u; R(x + Math.cos(an) * sp - 0.5, y + Math.sin(an) * sp + b * b * 10 - 0.5, 1, 1, '#FFFFFF'); }
+      }
+    }
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+
+// ---------- 11. Principal Opus ----------
+scene({
+  id: 'principal', title: 'Principal Opus', dur: 11.6, tod: [0.02, 0.1],
+  lines: [
+    L(1.7, 2.9, 'hW', 'FOR YOU, PRINCIPAL!'),
+    L(3.1, 4.7, 'opus', 'PRINCIPAL OPUS. I LIKE IT.'),
+    L(5.0, 6.3, 'k0', 'WE NEED MORE CLASSROOMS!'),
+    L(6.4, 7.2, 'k1', 'A LAB!', { noHold: true, dy: 0 }),
+    L(6.75, 7.6, 'k2', 'A LIBRARY!', { noHold: true, dy: -44 }),
+    L(7.1, 8.1, 'k3', 'A CAFETERIA!!', { noHold: true, dy: -88 }),
+    L(9.9, 11.6, 'sonnet', 'COMPLEX PARTS? LEAVE THEM TO ME.'),
+  ],
+  sfx: [[0.15, 'bell', { f: 784 }], [0.55, 'boing'], [0.95, 'thud'], [1.35, 'boing'], [1.6, 'pop', { f: 520 }], [1.62, 'twinkle'], [3.2, 'twinkle'], [4.0, 'whoosh'], [8.2, 'swoosh'], [8.6, 'stamp'], [10.3, 'twinkle']],
+  draw(t, T) {
+    camKF(t, [[0, 200, 70, 2.85], [1.0, 200, 96, 3.6, 'sine'], [4.6, 216, 108, 4.3, 'sine'], [8.2, 226, 108, 4.3], [11.6, 196, 112, 4.6, 'sine']], shakeAt(t, [[8.6, 5, 0.3]]));
+    world2(T, { doorOpen: t < 0.7 });
+    // Opus steps out of the door and down the step
+    const out = prog(t, 0.45, 0.95), ox = 200 - out * 4, oy = t < 0.45 ? by(1) + 8 : lerp(by(1) + 8, G, ease.in(out)) - 10 * 4 * out * (1 - out);
+    const sonX = 168;
+    drawSonnet(sonX, G, { look: t > 9 ? 0 : 1, spoon: t > 9.8 ? 'trowel' : 'up', armR: ramp(t, 10.0, 11.6), eyes: t > 3.1 && t < 4.7 ? 'happy' : null });
+    if (t > 10.0 && t < 10.8) twinkles(sonX + 12, G - 26, t, 10.0, 3, 5);
+    const j = jump(t, [[0.95, 0.01, 0]]);
+    drawOpus(ox, oy, { badge: prog(t, 1.55, 1.85), glint: prog(t, 3.15, 3.6), look: t > 4.3 && t < 8 ? 1 : 0, armR: { up: ramp(t, 8.1, 9.6) }, eyes: win(t, 3.1, 4.7) ? 'happy' : win(t, 7.6, 8.1) ? 'wide' : null, sq: out > 0.95 && t < 1.15 ? [1.12, 0.88] : j.sq });
+    if (win(t, 1.6, 2.2)) twinkles(ox - 9, G - 10, t, 1.6, 3, 4);
+    // Haiku W hops up to pin the badge
+    const wx = kf(t, [[1.1, 222], [1.35, 206, 'out'], [1.9, 206], [2.1, 222, 'sine']]);
+    const wj = jump(t, [[1.3, 0.35, 12], [2.95, 0.25, 4]]);
+    drawHaiku('W', wx, G, { hop: wj.y, sq: wj.sq, look: -1, arms: { up: ramp(t, 1.4, 1.7, 0.1) }, eyes: t > 1.7 && t < 3 ? 'happy' : null });
+    drawHaiku('Y', 236, G, { look: -1, ...jumpO(t, [[2.95, 0.25, 4]]) });
+    drawHaiku('B', 250, G, { look: -1, item: 'hammer', ...jumpO(t, [[3.0, 0.25, 4]]) });
+    // kids playing on the playground, then they run over with requests
+    for (let i = 0; i < 4; i++) {
+      const play = [322 + Math.sin(AMB * 1.3 + i * 1.6) * 22, G - 1 - (i % 2) * 2];
+      const tgt = 266 + i * 14, run = prog(t, 3.9 + i * 0.12, 4.7 + i * 0.12);
+      const x = lerp(play[0], tgt, ease.io(run)), y = lerp(play[1], G, run);
+      const moving = run > 0 && run < 1 || t < 3.9;
+      drawKid(x, y, { id: 'k' + i, pack: i, flip: run > 0 || Math.cos(AMB * 1.3 + i * 1.6) < 0, walk: moving ? t : null, look: run >= 1 ? -1 : 0, hop: run >= 1 ? hops(t, [[5.0 + i * 0.55, 0.25, 3]]) : t < 3.9 ? -Math.abs(Math.sin(AMB * 6 + i)) * 1.5 : 0, eyes: t < 3.9 ? 'happy' : null, raise: run >= 1 ? ramp(t, 5.0 + (i ? 1.2 + i * 0.35 : 0), 5.9 + (i ? 1.2 + i * 0.35 : 0.4), 0.1) : 0 });
+    }
+    finish2(T, t, this.lines, { after: () => ticketCard(t - 8.2, 'ISSUE #56', 'SCHOOL V2', '+ 2 WINGS  + 9 ROOMS  + 1 GLASS DOME', [['V2', '#4569CC'], ['EPIC', '#9A5BD0']]) });
+  },
+});
+
+// ---------- 12. Blueprint v2 ----------
+scene({
+  id: 'plan2', title: 'Blueprint v2', dur: 9.2, tod: [0.1, 0.16],
+  lines: [
+    L(0.15, 1.3, 'opus', 'WAIT. PLAN FIRST.'),
+    L(1.5, 3.4, 'opus', 'TWO WINGS. NINE ROOMS. ONE DOME.', { cps: 24 }),
+    L(3.6, 5.3, 'sonnet', 'DOME, STAIRS, ARCHES: MINE.'),
+    L(5.8, 6.8, 'opus', 'APPROVED.'),
+    L(7.0, 7.7, 'hY', 'AND US?'),
+    L(7.8, 9.2, 'opus', 'EVERYTHING ELSE. GO!'),
+  ],
+  sfx: [[0.05, 'whoosh'], [0.3, 'skid'], [1.6, 'tick'], [2.1, 'tick'], [2.55, 'tick'], [3.7, 'twinkle'], [5.62, 'stamp'], [8.95, 'whoosh', { n: 3 }]],
+  draw(t, T) {
+    camKF(t, [[0, 186, 108, 3.9], [3.5, 206, 106, 4.3, 'sine'], [6.0, 200, 108, 4.4, 'sine'], [9.2, 180, 108, 4.1, 'sine']], shakeAt(t, [[5.62, 5, 0.3]]));
+    world2(T);
+    const EX = 250, hl = win(t, 1.6, 3.4) ? kf(t, [[2.05, 0], [2.2, 2], [2.5, 2], [2.65, 1]]) : null;
+    drawEasel(EX, T, { hl, v2: true, approved: t > 5.62 ? t - 5.62 : 0 });
+    const sxp = kf(t, [[3.45, 96], [3.9, 110, 'sine']]);
+    drawSonnet(sxp, G, { walk: win(t, 3.45, 3.9) ? t : null, spoon: 'trowel', armR: ramp(t, 3.7, 5.2), look: 1, eyes: t > 5.7 && t < 7 ? 'happy' : null });
+    if (win(t, 3.7, 4.4)) twinkles(sxp + 12, G - 26, t, 3.7, 3, 5);
+    for (let i = 0; i < 3; i++) {
+      const k = B3[i], x0 = 122 + i * 14;
+      const dash = t > 8.9 ? (t - 8.9) * 260 : 0, ready = t < 0.35 ? 1 : 0;
+      const x = x0 + dash + (t < 0.3 ? t * 30 : 9);
+      if (x > 420) continue;
+      if (ready || dash) speedLines(x, G, 1, t, 12);
+      drawHaiku(k, x, G, { look: t > 6.9 && t < 7.8 ? 1 : 1, walk: dash || t < 0.3 ? t : null, walkHz: 8, sq: t < 0.45 ? [1.14, 0.86] : [1, 1], eyes: t > 0.3 && t < 1.3 ? 'wide' : null, item: k === 'W' ? 'clip' : k === 'B' ? 'hammer' : null, ...jumpO(t, [[7.85 + i * 0.07, 0.25, 4]]) });
+    }
+    const stamp = ramp(t, 5.3, 5.62, 0.12) * (t < 5.62 ? 1 : 0) + (t >= 5.62 ? clamp(1 - (t - 5.62) / 0.25, 0, 1) * 0.3 : 0);
+    drawOpus(196, G, { badge: 1, look: t > 3.5 && t < 5.4 ? -1 : 1, armR: { point: ramp(t, 1.5, 3.4, 0.2), up: stamp }, stampOn: stamp > 0.05 ? 1 : null, pointTo: win(t, 1.6, 3.4) && hl != null ? easelItem(EX, hl) : null, eyes: t < 0.6 ? 'wide' : null, armL: ramp(t, 0.1, 0.9, 0.1) });
+    finish2(T, t, this.lines);
+  },
+});
+
+// ---------- 13. The wings ----------
+scene({
+  id: 'wings', title: 'The new wings', dur: 12.8, tod: [0.22, 0.5],
+  lines: [
+    L(6.3, 7.4, 'sonnet', 'PRECISION WORK.'),
+    L(10.8, 12.6, 'opus', 'ON TIME. UNDER BUDGET.'),
+  ],
+  sfx: [[0.25, 'whoosh'], [0.45, 'pop', { f: 260 }], [0.6, 'pop', { f: 320 }], [0.75, 'pop', { f: 380 }], [5.0, 'clatter'], [5.2, 'step'], [5.45, 'boing'], [5.7, 'boing'], [9.1, 'boing'], [9.4, 'thud'], [10.6, 'pop', { f: 300 }], [11.0, 'toast']],
+  draw(t, T) {
+    camKF(t, [[0, 200, 74, 2.35], [5.3, 200, 74, 2.35], [6.1, 318, 72, 4.0, 'sine'], [9.0, 316, 74, 4.0], [9.9, 200, 72, 2.35, 'sine'], [12.8, 200, 74, 2.42]]);
+    world2(T);
+    drawPallet(6, 6); drawPallet(394, 6);
+    // throwers
+    const last = [-9, -9, -9];
+    for (const b of SCHOOL2.blocks) if (b.t0 <= T) last[b.who] = Math.max(last[b.who], b.t0);
+    [['W', 22], ['Y', 34], ['B', 376]].forEach(([k, x], i) => {
+      const thr = clamp(1 - (T - last[i]) / 0.16, 0, 1);
+      drawHaiku(k, x, G, { arms: { throw: thr }, hop: -thr * 1.2 + hops(t, [[11.0 + i * 0.07, 0.25, 4]]), look: i < 2 ? 1 : -1, eyes: t > 10.8 ? 'happy' : null });
+    });
+    if (win(t, 0.2, 0.8)) { speedLines(110, G, 1, t, 12); speedLines(300, G, -1, t, 12); }
+    // Opus watches with his clipboard
+    drawOpus(200, G, { badge: 1, item: 'clipboard', checks: t > 11 ? 3 : t > 9.6 ? 2 : t > 5.8 ? 1 : 0, look: Math.sin(t * 1.3) * 0.9, eyes: t > 10.8 ? 'happy' : null });
+    // Sonnet climbs the scaffold and builds the dome, then the arches
+    let sx_ = 150, sy_ = G, sw = null, arm = 0;
+    if (t > 4.4) { const u = prog(t, 4.4, 5.0); sx_ = lerp(150, 300, ease.io(u)); sw = u < 1 ? t : null; }
+    if (t > 5.0) { const u = prog(t, 5.0, 5.8); sx_ = lerp(300, 316, u); sy_ = lerp(G, by(8) + 2, ease.out(u)) - Math.abs(Math.sin(u * Math.PI * 3)) * 4; }
+    if (t > 9.0) { const u = prog(t, 9.0, 9.45); sx_ = lerp(316, 286, u); sy_ = lerp(by(8) + 2, G, ease.in(u)) - 14 * 4 * u * (1 - u); }
+    for (const row of SCHOOL2.dome) arm = Math.max(arm, ramp(T, row.t - 0.15, row.t + 0.05, 0.1));
+    if (t > 9.5) arm = Math.max(arm, ramp(t, 9.55, 10.6));
+    drawSonnet(sx_, sy_, { walk: sw, spoon: 'trowel', armR: arm, look: t > 5.8 && t < 9 ? 1 : 0, noShadow: sy_ < G - 2, eyes: t > 9.5 && t < 11 ? 'happy' : null });
+    for (const row of SCHOOL2.dome) if (T > row.t && T < row.t + 0.6) twinkles(DOME.cx, DOME.base() - 6, T, row.t, 3, 12);
+    for (const a of SCHOOL2.arches) if (T > a.t && T < a.t + 0.5) { const [x, y, W] = rectOf(a.rect); sparkle(x + W / 2, y + 2, T - a.t, 4); }
+    finish2(T, t, this.lines, { after: () => toast('MILESTONE!', 'TWO NEW WINGS', t - 11.0, (x, y) => iconBlock(x, y, '#93D2EE')) });
+  },
+});
+
+// ---------- 14. The inspection (dollhouse cutaway) ----------
+const TOUR_CUT = 1.8;
+function opusTour(t) { // Principal Opus walks the ground floor
+  const x = kf(t, [[3.0, 200], [3.8, 204], [4.6, 116, 'sine'], [7.0, 116], [7.8, 150, 'sine'], [9.6, 150], [10.4, 212, 'sine'], [12.6, 212], [13.5, 356, 'sine']]);
+  const d = kf(t, [[7.0, 3], [7.8, 5], [9.6, 5], [10.0, 3]]);
+  const walking = win(t, 3.8, 4.6) || win(t, 7.0, 7.8) || win(t, 9.6, 10.4) || win(t, 12.6, 13.5);
+  return { x: x + d / 2, y: FLOOR_Y[1][1] - d / 2, walking, d };
+}
+scene({
+  id: 'tour', title: 'The inspection', dur: 27.0, tod: [0.52, 0.72],
+  lines: [
+    L(0.2, 1.6, 'opus', 'TIME FOR AN INSPECTION.'),
+    L(4.8, 6.0, 'k1', 'IS THIS... CEMENT?'),
+    L(6.2, 7.2, 'sonnet', 'SOUP. MOSTLY.'),
+    L(7.9, 9.5, 'opus', 'APPROVED. APPROVED. APPROVED.', { max: 20 }),
+    L(10.6, 11.2, 'hW', '1 + 1 = ?', { noHold: true }),
+    L(11.3, 11.9, 'k2', '2!', { noHold: true }),
+    L(12.1, 12.9, 'hW', 'CORRECT!'),
+    L(14.4, 15.8, 'hB', 'GOGGLES ON, PLEASE.'),
+    L(19.0, 20.8, 'k4', 'IT WORKS ON MY MACHINE!'),
+    L(22.4, 23.3, 'k5', 'SHHH!'),
+    L(24.0, 25.4, 'k6', 'MASTERPIECE.'),
+  ],
+  sfx: (() => {
+    const e = [[1.8, 'whoosh'], [2.1, 'whoosh', { n: 2 }], [2.4, 'whoosh', { n: 4 }], [2.0, 'clatter'], [2.6, 'clatter', { n: 3 }], [3.2, 'twinkle'], [3.3, 'boing'], [3.8, 'thud'],
+      [4.5, 'bubble'], [5.2, 'bubble', { n: 1 }], [8.1, 'stamp'], [8.65, 'stamp'], [9.2, 'stamp'], [10.65, 'chalk'], [11.95, 'ding'], [12.0, 'chalk'], [12.2, 'twinkle'],
+      [13.6, 'bubble'], [13.9, 'bubble', { n: 2 }], [14.05, 'poof'], [22.2, 'thud'], [24.4, 'twinkle']];
+    for (let k = 0; k < 9; k++) e.push([16.2 + k * 0.25, 'drum', { n: k }]);
+    for (let k = 0; k < 10; k++) e.push([18.9 + k * 0.18, 'type', { n: k }]);
+    return e;
+  })(),
+  draw(t, T) {
+    camKF(t, [[0, 200, 74, 2.4], [1.8, 200, 74, 2.4], [3.6, 200, 86, 2.7, 'sine'], [4.4, 82, 113, 8.4, 'sine'], [7.2, 88, 113, 8.4], [7.8, 156, 113, 8.4, 'sine'], [9.3, 160, 113, 8.0],
+      [9.7, 200, 112, 7.6, 'sine'], [10.5, 248, 113, 8.4, 'sine'], [12.9, 252, 113, 8.4], [13.6, 322, 113, 8.2, 'sine'], [16.0, 326, 113, 8.2], [16.6, 322, 86, 8.4, 'sine'], [18.4, 318, 86, 8.4],
+      [19.0, 238, 86, 8.4, 'sine'], [20.9, 234, 86, 8.4], [21.5, 162, 86, 8.4, 'sine'], [23.5, 158, 86, 8.4], [24.1, 82, 86, 8.4, 'sine'], [25.8, 86, 86, 8.4], [27.0, 200, 76, 2.4, 'sine']]);
+    const op = opusTour(t), inside = t > 3.8;
+    const opusIn = r => { if (!inside) return; if (op.x < r.x0 - 22 || op.x > r.x1 + 22) return; const st = ramp(t, 7.95, 9.4, 0.1); drawOpus(op.x, op.y, { badge: 1, item: t < 7 || t > 9.7 ? 'clipboard' : null, walk: op.walking ? t : null, look: t > 4.6 && t < 7 ? -1 : t > 10.6 && t < 12.6 ? -1 : 0, armR: { up: st * (0.6 + 0.4 * Math.sin(AMB * 11)) }, stampOn: st > 0.05 ? 1 : null, eyes: t > 12.1 && t < 13 ? 'happy' : t > 14 && t < 14.6 ? 'wide' : null }); };
+    const kid = (r, i, u, d, o = {}) => { const [x, y] = r.f(u, d); drawKid(x, y, Object.assign({ id: 'k' + i, pack: i, look: 0 }, o)); };
+    const occupants = {
+      caf: r => {
+        const [sx0, sy0] = r.f(14, 2); drawSonnet(sx0, sy0, { spoon: [6 + Math.cos(AMB * 8) * 1.5, -17 + Math.sin(AMB * 8) * 0.8], look: t > 6 ? 1 : 0, eyes: t > 6.2 && t < 7.2 ? 'happy' : null });
+        [34, 46, 58, 70].forEach((u, i) => kid(r, [1, 7, 8, 9][i], u, 9, { hop: Math.sin(AMB * 5 + i) > 0.92 ? -0.8 : 0, eyes: i === 0 && t > 4.8 && t < 6.0 ? null : 'happy', look: i === 0 && t > 4.8 && t < 6.2 ? -1 : 0 }));
+      },
+      office: r => opusIn(r),
+      class: r => {
+        r.solved = t > 11.95 ? 1 : 0;
+        const [wx, wy] = r.f(6, 6); drawHaiku('W', wx, wy, { arms: { throw: ramp(t, 10.5, 11.2) }, look: 1, eyes: t > 12.1 ? 'happy' : null, ...jumpO(t, [[12.15, 0.25, 3]]) });
+        [[20, 6, 2], [36, 6, 3], [26, 11, 10], [42, 11, 11]].forEach(([u, d, i]) => kid(r, i, u, d, { raise: i === 2 ? ramp(t, 11.25, 12.0, 0.1) : 0, eyes: t > 12.1 ? 'happy' : null, ...(i === 2 ? jumpO(t, [[11.3, 0.2, 2]]) : {}) }));
+      },
+      lab: r => {
+        const soot = prog(t, 14.05, 14.3);
+        [[20, 12, 12], [44, 12, 13]].forEach(([u, d, i]) => kid(r, i, u, d, { goggles: i === 12 || t > 15.4, soot: i === 13 ? soot : 0, eyes: i === 13 && soot > 0 ? (t < 15 ? 'happy' : null) : null }));
+        const [bx_, by_] = r.f(2, 4); drawHaiku('B', bx_, by_, { look: 1, arms: { up: ramp(t, 14.4, 15.8) * 0.6 }, eyes: t > 14.05 && t < 14.4 ? 'wide' : null });
+      },
+      art: r => { kid(r, 6, 36, 4, { look: -1, eyes: t > 24.2 ? 'happy' : null, raise: 0.6 + Math.sin(AMB * 6) * 0.3 }); kid(r, 14, 64, 4, { look: -1 }); },
+      library: r => {
+        kid(r, 5, 34, 6, { book: '#3D7DDB', eyes: t > 22.2 && t < 23.4 ? 'wide' : 'closed' });
+        if (t > 19.5) { const u = prog(t, 21.2, 23.4), [hx, hy] = r.f(lerp(66, 10, u), 9); drawHaiku('B', hx, hy, { walk: u > 0 && u < 1 ? t * 0.45 : null, look: -1, eyes: t > 22.2 && t < 23.6 ? 'wide' : null, hop: u > 0 && u < 1 ? -Math.abs(Math.sin(t * 3)) * 1.5 : 0 }); }
+      },
+      comp: r => { [[14, 10, 4], [30, 10, 15], [46, 10, 16]].forEach(([u, d, i]) => kid(r, i, u, d, { eyes: i === 4 && t > 20.6 ? 'happy' : null, hop: i === 4 ? hops(t, [[19.1, 0.2, 1.5]]) : 0 })); },
+      music: r => {
+        const [x, y] = r.f(60, 10); const beat = Math.sin(AMB * 25) > 0;
+        drawHaiku('Y', x, y, { arms: beat ? { throw: 1 } : { up: 0.6 }, armsL: beat ? 0.6 : 1, eyes: 'happy', hop: beat ? -0.6 : 0 });
+        [[18, 4, 17], [32, 4, 18]].forEach(([u, d, i], k) => kid(r, i, u, d, { eyes: 'happy', hop: -Math.abs(Math.sin(AMB * 7 + k * 1.6)) * 3 }));
+      },
+    };
+    const occupantsFront = {
+      office: r => {
+        const [x, y] = r.f(10, 1.5);
+        [[14, 8.1], [19, 8.65], [24, 9.2]].forEach(([u, tt]) => { at(x, y); cube(u - 2, -7.6, 4, 0.6, 3, '#FFFFFF'); if (t > tt) { const s = t - tt < 0.1 ? 1.4 : 1; ctx.globalAlpha = 0.9; R(x + u - 1.5 * s, y - 7.9, 3 * s, 1.2, '#C8452F'); ctx.globalAlpha = 1; } });
+      },
+      caf: r => opusIn(r), lobby: r => opusIn(r), class: r => opusIn(r),
+      lab: r => {
+        opusIn(r);
+        const a = t - 14.05;
+        if (a > -0.6 && a < 0) { const [x, y] = r.f(53, 6); disc(x, y - 12 + Math.sin(AMB * 40) * 0.5, 1.4, '#F2832E'); }
+        if (a > 0 && a < 0.9) { const [x, y] = r.f(53, 8); dust(x, y - 10, a * 0.75, 70, 9, 14, '#8A8580'); dust(x, y - 12, a * 0.6, 71, 6, 10, '#D9D2C5'); }
+      },
+      library: r => { if (win(t, 22.0, 22.5)) { const u = prog(t, 22.0, 22.25), [x, y] = r.f(lerp(66, 10, prog(t, 21.2, 23.4)), 9); at(x + 4, lerp(y - 12, y, ease.in(u))); cube(-2, -1, 4, 1.4, 3, '#C8452F'); } },
+      music: r => { const [px, py] = r.f(16, 12); for (let i = 0; i < 6; i++) mini.note(px + i * 9, py - 10, ((AMB * 0.9 + i * 0.27) % 1.7), ['#C8452F', '#3D7DDB', '#9A5BD0'][i % 3]); },
+    };
+    world2(T, { cut: { out: ST.tour + TOUR_CUT }, occupants, occupantsFront });
+    // before he steps inside, Opus is on the lawn
+    if (!inside) {
+      const hopIn = prog(t, 3.0, 3.8);
+      drawOpus(lerp(200, 204, hopIn), lerp(G, FLOOR_Y[1][1] - 1.5, ease.out(hopIn)) - 14 * 4 * hopIn * (1 - hopIn), { badge: 1, item: 'clipboard', eyes: win(t, 2.0, 3.0) ? 'wide' : null, look: win(t, 2.0, 2.9) ? Math.sin(t * 6) : 0 });
+    }
+    if (win(t, 11.95, 12.6)) { const r = ROOM.class, [bx_, by_] = r.w(12, 16); twinkles(bx_ + 22, by_ + 4, t, 11.95, 3, 6); }
+    finish2(T, t, this.lines, { after: () => {
+      caption('CAFETERIA', t - 4.4); caption("PRINCIPAL'S OFFICE", t - 7.6, 1.4); caption('STAIRS BY SONNET', t - 9.35, 0.9); caption('CLASS 1-A', t - 10.7); caption('SCIENCE LAB', t - 13.4);
+      caption('MUSIC ROOM', t - 16.4); caption('COMPUTER LAB', t - 18.8); caption('LIBRARY', t - 21.4); caption('ART ROOM', t - 24.0);
+    } });
+  },
+});
+
+// ---------- 15. Grand opening at dusk ----------
+const FIREWORKS = [[1.6, 120, 22, '#FF6B6B'], [2.2, 290, 14, '#FFD34E'], [2.9, 200, 8, '#7EE0FF'], [3.6, 60, 30, '#B07BE0'], [4.3, 340, 24, '#7EDB3A'], [5.2, 150, 16, '#FF9A4D'],
+  [6.0, 262, 26, '#EE6FA8'], [7.2, 96, 20, '#FF6B6B'], [8.0, 312, 12, '#FFD34E'], [9.4, 200, 6, '#EE6FA8'], [10.2, 136, 24, '#7EE0FF'], [10.8, 270, 18, '#FFD34E'], [11.1, 200, 30, '#FFFFFF']];
+scene({
+  id: 'grand', title: 'Grand opening', dur: 13.0, tod: [0.88, 1.0],
+  lines: [
+    L(2.4, 4.0, 'opus', 'SCHOOL V2... SHIPPED!'),
+    L(4.2, 5.0, 'hY', 'SHIP IT!!'),
+    L(5.2, 6.6, 'sonnet', 'AND THE KITCHEN WORKS.'),
+    L(6.9, 8.2, 'k0', 'CAN WE GET A POOL?'),
+    L(8.9, 9.9, 'opus', "...THAT'S V3.", { cps: 13 }),
+  ],
+  sfx: (() => {
+    const e = [[0.25, 'whoosh'], [0.6, 'whoosh', { n: 2 }], [0.9, 'clatter'], [1.9, 'toast'], [1.95, 'xp'], [4.3, 'boing'], [4.38, 'boing'], [4.46, 'boing'], [8.4, 'cricket'], [10.05, 'tada'], [10.1, 'boing'], [11.4, 'shutter']];
+    for (const f of FIREWORKS) e.push([f[0], 'firework', { n: Math.round(f[1]) }]);
+    return e;
+  })(),
+  draw(t0, T0) {
+    const t = Math.min(t0, 11.4), T = T0 - (t0 - t);
+    camKF(t, [[0, 200, 72, 2.45], [3.0, 200, 72, 2.55, 'sine'], [6.8, 196, 88, 3.0, 'sine'], [10.2, 196, 86, 2.95], [11.4, 200, 74, 2.5, 'sine']]);
+    const lit = prog(t, 0.8, 3.0);
+    world2(T, { cut: { out: ST.tour + TOUR_CUT, back: ST.grand + 0.2 }, lit, doorOpen: false });
+    const laugh = t > 10.0, pose = t > 10.9;
+    const jumpAll = k => jump(t, [[4.3 + k * 0.08, 0.3, 6], [10.1 + k * 0.05, 0.3, 5], [10.9 + k * 0.04, 0.5, 8]]);
+    [96, 110, 124, 138, 262, 276, 290, 304].forEach((x, i) => { const j = jumpAll(i % 4); drawKid(x, G - (i % 2) * 2, { id: 'k' + i, pack: i, flip: x > 200, look: t > 8.3 && t < 8.9 ? (x < 200 ? 1 : -1) : 0, eyes: laugh || t < 6.8 ? 'happy' : null, hop: j.y, sq: j.sq, raise: i === 0 ? ramp(t, 6.9, 8.2, 0.1) : pose ? 1 : 0 }); });
+    { const j = jumpAll(1); drawSonnet(168, G, { look: t > 8.3 && t < 8.9 ? 1 : 0, eyes: laugh || win(t, 5.2, 6.6) ? 'happy' : null, armL: ramp(t, 10.9, 13), spoon: 'up', hop: j.y, sq: j.sq }); }
+    { const j = jumpAll(0); drawOpus(200, G, { badge: 1, look: t > 6.9 && t < 8.3 ? 1 : 0, armL: { up: ramp(t, 2.4, 4.0) * 0.8 + ramp(t, 10.9, 13) }, armR: { up: ramp(t, 10.9, 13) }, eyes: laugh || win(t, 2.4, 4.0) ? 'happy' : null, hop: j.y, sq: j.sq }); }
+    ['W', 'Y', 'B'].forEach((k, i) => { const j = jumpAll(i + 2); drawHaiku(k, 232 + i * 13, G, { look: t > 8.3 && t < 8.9 ? -1 : 0, arms: { up: Math.max(ramp(t, 4.2, 5.0), ramp(t, 10.9, 13)) }, eyes: laugh || win(t, 4.2, 5.0) ? 'happy' : null, hop: j.y, sq: j.sq }); });
+    finish2(T, t, this.lines, { after: () => {
+      fireworks(t, FIREWORKS);
+      xpOrbs(200, by(1), t - 1.9);
+      toast('ACHIEVEMENT!', 'SCHOOL V2 SHIPPED', t - 1.9, (x, y) => { S(x - 14, y - 4, 28, 14, '#E6D09E'); S(x - 16, y - 8, 32, 4, '#4E6884'); S(x - 4, y - 14, 8, 6, '#93D2EE'); S(x - 2, y + 3, 4, 7, '#C24B34'); });
+    } });
+    if (t0 >= 11.4) S(0, 0, VW, VH, `rgba(255,255,255,${clamp(1 - (t0 - 11.4) / 0.3, 0, 1)})`);
+  },
+});
+
+// ---------- 16. The end ----------
+scene({
+  id: 'end', title: 'The end', dur: 5.0, noWipe: true, noTint: true,
+  sfx: [[0.05, 'pageflip'], [1.0, 'tada'], [2.3, 'twinkle']],
+  draw(t, T) {
+    setCam(0, 0, 3);
+    S(0, 0, VW, VH, '#F0EDE6');
+    for (let y = 0; y < VH; y += 24) for (let x = (y / 24 % 2) * 12; x < VW; x += 24) S(x, y, 2, 2, '#E4DFD5');
+    const oy = kf(t, [[0, 560], [0.6, 0, 'back']]), rot = kf(t, [[0, -0.12], [0.6, 0.02, 'back'], [5, 0.015]]);
+    const px = 168, py = 22 + oy, pw = 624, ph = 351;
+    ctx.save();
+    ctx.translate(480 * K, (py + ph / 2) * K); ctx.rotate(rot); ctx.translate(-480 * K, -(py + ph / 2) * K);
+    S(px - 14 + 8, py - 14 + 8, pw + 28, ph + 70, 'rgba(31,30,29,0.18)');
+    S(px - 14, py - 14, pw + 28, ph + 70, '#FFFFFF');
+    ctx.save();
+    ctx.beginPath(); ctx.rect(px * K, py * K, pw * K, ph * K); ctx.clip();
+    camLock = { x: 44 - 40, y: -26, s: 1.66, ox: px, oy: py };
+    const prevTOD = TOD; TOD = 1.0;
+    NOBLINK = true; SCENES.find(s => s.id === 'grand').draw(11.39, ST.grand + 11.39); NOBLINK = false;
+    TOD = prevTOD; camLock = null;
+    ctx.restore();
+    textC('DAY TWO · 5.5 ACADEMY V2', 480, py + ph + 20, 2, '#3C3833');
+    ctx.restore();
+    if (t > 1.0) { const s = ease.back(clamp((t - 1.0) / 0.3, 0, 1)); textC('THE END', 480, 466 + (1 - s) * 20, 4, '#1F1E1D'); }
+    if (t > 2.3) { const s = ease.back(clamp((t - 2.3) / 0.25, 0, 1)); textC('COMING IN V3: THE POOL?', 480, 512 + (1 - s) * 12, 2, '#C4613F'); }
+  },
+});
+
+/* ==== timeline.js ==== */
+/* ---- timeline: reading pauses, scene start times, the school plans, every sound, and the frame renderer ---- */
 // Reading pauses: once a bubble has finished typing, the story holds until it can be read.
 // Story time (what the scenes are written in) pauses; real time (AMB) keeps the world alive.
 SCENES.forEach(s => {
@@ -2229,6 +3006,7 @@ function warp(s, r) { let t = r; for (const [ht, ex] of s.holds) { if (t <= ht) 
 function unwarp(s, t) { let r = t; for (const [ht, ex] of s.holds) if (ht < t) r += ex; return r; }
 function storyToReal(Ts) { let i = SCENES.length - 1; while (i > 0 && Ts < SCENES[i].start) i--; const s = SCENES[i]; return s.rstart + unwarp(s, Ts - s.start); }
 planSchool(ST);
+planSchool2(ST);
 const SFX_EVENTS = (() => {
   const ev = [];
   for (const s of SCENES) {
@@ -2240,6 +3018,9 @@ const SFX_EVENTS = (() => {
   SCHOOL.blocks.forEach((b, i) => { if (b.t0 != null && i % 3 === 0) ev.push([storyToReal(b.t0), 'throw', { n: i }]); });
   SCHOOL.windows.forEach((w, i) => { if (i > 0) ev.push([storyToReal(w.t), 'pop', { f: 420 + i * 30, n: i }]); });
   for (let i = 0; i < 10; i++) ev.push([storyToReal(SCHOOL.sign.t0 + i * SCHOOL.sign.dt), 'pop', { f: 520 + i * 25, v: 0.25, n: i }]);
+  SCHOOL2.blocks.forEach((b, i) => { ev.push([storyToReal(b.t), 'place', { n: i }]); if (i % 3 === 0) ev.push([storyToReal(b.t0), 'throw', { n: i }]); });
+  SCHOOL2.dome.forEach((d, i) => { ev.push([storyToReal(d.t), 'place', { n: i }]); ev.push([storyToReal(d.t) + 0.02, 'twinkle', {}]); });
+  SCHOOL2.arches.forEach((a, i) => ev.push([storyToReal(a.t), 'pop', { f: 600 + i * 25, v: 0.22, n: i }]));
   return ev.sort((a, b) => a[0] - b[0]);
 })();
 

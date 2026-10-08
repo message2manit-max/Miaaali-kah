@@ -379,14 +379,21 @@ scene({
   lines: [
     L(0.2, 2.0, 'opus', 'PONDERING...', { think: true, cps: 12, silent: true }),
     L(2.25, 3.3, 'opus', 'IDEA: HAIKU TOWER!'),
+    L(5.5, 6.5, 'sonnet', 'PRECISION PARTS: MINE.'),
     L(9.1, 10.2, 'hY', 'WE MEANT TO DO THAT.'),
   ],
-  sfx: [[0.3, 'think'], [0.75, 'think', { n: 1 }], [1.2, 'think'], [1.65, 'think', { n: 1 }], [2.0, 'ding'], [3.3, 'boing'], [3.6, 'boing'], [3.9, 'boing'], [6.95, 'pop', { f: 500 }], [7.0, 'bell', { f: 880 }], [7.15, 'tick'], [7.45, 'tick'], [7.75, 'tick'], [8.35, 'place', { n: 4 }], [8.5, 'fall'], [9.0, 'thud'], [9.06, 'thud'], [9.2, 'tada']],
+  sfx: [[0.3, 'think'], [0.75, 'think', { n: 1 }], [1.2, 'think'], [1.65, 'think', { n: 1 }], [2.0, 'ding'], [3.3, 'boing'], [3.6, 'boing'], [3.9, 'boing'], [6.6, 'throw'], [6.66, 'throw', { n: 2 }], [6.95, 'pop', { f: 500 }], [6.97, 'twinkle'], [7.0, 'bell', { f: 880 }], [7.15, 'tick'], [7.45, 'tick'], [7.75, 'tick'], [8.35, 'place', { n: 4 }], [8.5, 'fall'], [9.0, 'thud'], [9.06, 'thud'], [9.2, 'tada']],
   draw(t, T) {
     camKF(t, [[0, 172, 112, 4.6], [2.2, 168, 110, 4.8, 'sine'], [3.3, 176, 104, 4.0, 'sine'], [4.6, 200, 72, 2.85, 'sine'], [8.4, 200, 70, 2.9], [9.2, 200, 96, 3.6, 'sine']]);
     world(T);
     drawCauldron(64, T);
-    drawSonnet(86, G, { flip: true, spoon: [14 + Math.cos(AMB * 9) * 2, -17 + Math.sin(AMB * 9)], eyes: t > 9.0 ? 'happy' : null, look: t > 4 ? -1 : 0 });
+    // Sonnet takes the precision parts: she tosses the clock face and the bell up to the tower
+    const sxp = kf(t, [[4.5, 86], [5.3, 108, 'sine']]);
+    const toss = ramp(t, 6.5, 6.75, 0.08);
+    drawSonnet(sxp, G, t < 4.5 ? { flip: true, spoon: [14 + Math.cos(AMB * 9) * 2, -17 + Math.sin(AMB * 9)], look: -1 } : { walk: win(t, 4.5, 5.3) ? t : null, spoon: 'trowel', armR: toss, armL: toss, look: 1, eyes: t > 7.0 ? 'happy' : null, ...jumpO(t, [[6.55, 0.22, 3]]) });
+    if (win(t, 6.6, 6.95)) { const u = (t - 6.6) / 0.35, x = lerp(sxp + 10, 200, u), y = lerp(G - 22, by(10) + 8, u) - 26 * 4 * u * (1 - u); disc(x, y, 5, '#2F3A4A'); disc(x, y, 4, '#F7F3EA'); }
+    if (win(t, 6.66, 7.0)) { const u = (t - 6.66) / 0.34, x = lerp(sxp + 10, 200, u), y = lerp(G - 22, by(11) + 4, u) - 30 * 4 * u * (1 - u); at(x, y + 3); cube(-2, -3, 4, 3, 3, C.gold, '#FFE08A', C.goldD); }
+    if (win(t, 6.95, 7.6)) twinkles(200, by(10) + 6, t, 6.95, 4, 9);
     drawOpus(150, G, { eyes: t < 2.0 ? 'up' : t > 8.5 && t < 9.0 ? 'wide' : null, armR: ramp(t, 2.05, 3.2), look: t > 3.3 ? 1 : 0, ...jumpO(t, [[2.0, 0.25, 3]]) });
     if (win(t, 2.0, 3.1)) bulb(150, G - 27, t - 2.0);
     const pre = [222, 234, 246];
@@ -518,7 +525,7 @@ scene({
 
 // ---------- 10. The photo ----------
 scene({
-  id: 'end', title: 'The end', dur: 4.4, noWipe: true, noTint: true,
+  id: 'photo1', title: 'Day one, done', dur: 4.4, noWipe: true, noTint: true,
   sfx: [[0.05, 'pageflip'], [1.0, 'tada'], [2.3, 'twinkle']],
   draw(t, T) {
     setCam(0, 0, 3);
@@ -541,62 +548,8 @@ scene({
     ctx.restore();
     textC('DAY ONE · 5.5 ACADEMY', 480, py + ph + 20, 2, '#3C3833');
     ctx.restore();
-    if (t > 1.0) { const s = ease.back(clamp((t - 1.0) / 0.3, 0, 1)); textC('THE END', 480, 466 + (1 - s) * 20, 4, '#1F1E1D'); }
-    if (t > 2.3) textC('COMING IN V2: THE CAFETERIA', 480, 510, 2, '#C4613F');
+    if (t > 1.0) { const s = ease.back(clamp((t - 1.0) / 0.3, 0, 1)); textC('DAY ONE: DONE!', 480, 466 + (1 - s) * 20, 4, '#1F1E1D'); }
+    if (t > 2.3) { const s = ease.back(clamp((t - 2.3) / 0.25, 0, 1)); textC('NEXT UP: SCHOOL V2', 480, 512 + (1 - s) * 12, 2, '#C4613F'); }
   },
 });
 
-// Reading pauses: once a bubble has finished typing, the story holds until it can be read.
-// Story time (what the scenes are written in) pauses; real time (AMB) keeps the world alive.
-SCENES.forEach(s => {
-  s.holds = [];
-  for (const ln of s.lines || []) {
-    if (ln.noHold || ln.think) continue;
-    const typed = 0.1 + ln[3].length / lineCps(ln);
-    const need = Math.max(0.75, ln[3].length * 0.025) - ((ln[1] - ln[0]) - typed);
-    if (need > 0.04) s.holds.push([ln[0] + typed, Math.round(need * 20) / 20]);
-  }
-  s.holds.sort((a, b) => a[0] - b[0]);
-  s.rdur = s.dur + s.holds.reduce((a, h) => a + h[1], 0);
-});
-let DUR = 0, SDUR = 0;
-SCENES.forEach(s => { s.start = SDUR; ST[s.id] = SDUR; SDUR += s.dur; s.rstart = DUR; DUR += s.rdur; });
-function warp(s, r) { let t = r; for (const [ht, ex] of s.holds) { if (t <= ht) break; if (t < ht + ex) return ht; t -= ex; } return t; }
-function unwarp(s, t) { let r = t; for (const [ht, ex] of s.holds) if (ht < t) r += ex; return r; }
-function storyToReal(Ts) { let i = SCENES.length - 1; while (i > 0 && Ts < SCENES[i].start) i--; const s = SCENES[i]; return s.rstart + unwarp(s, Ts - s.start); }
-planSchool(ST);
-const SFX_EVENTS = (() => {
-  const ev = [];
-  for (const s of SCENES) {
-    for (const e of (s.sfx || [])) ev.push([s.rstart + unwarp(s, e[0]), e[1], e[2] || {}]);
-    for (const e of scriptSfx(s)) ev.push([s.rstart + unwarp(s, e[0]), e[1], e[2] || {}]);
-    if (!s.noWipe && s.rstart > 0) ev.push([s.rstart - 0.28, 'swoosh', {}]);
-  }
-  SCHOOL.blocks.forEach((b, i) => ev.push([storyToReal(b.t), 'place', { n: i }]));
-  SCHOOL.blocks.forEach((b, i) => { if (b.t0 != null && i % 3 === 0) ev.push([storyToReal(b.t0), 'throw', { n: i }]); });
-  SCHOOL.windows.forEach((w, i) => { if (i > 0) ev.push([storyToReal(w.t), 'pop', { f: 420 + i * 30, n: i }]); });
-  for (let i = 0; i < 10; i++) ev.push([storyToReal(SCHOOL.sign.t0 + i * SCHOOL.sign.dt), 'pop', { f: 520 + i * 25, v: 0.25, n: i }]);
-  return ev.sort((a, b) => a[0] - b[0]);
-})();
-
-function renderAt(R_) {
-  R_ = clamp(R_, 0, DUR - 1e-4);
-  AMB = R_;
-  beginFrame();
-  let i = SCENES.length - 1;
-  while (i > 0 && R_ < SCENES[i].rstart) i--;
-  const s = SCENES[i];
-  for (const k in A) delete A[k];
-  for (const k in TALK) delete TALK[k];
-  const t = warp(s, R_ - s.rstart);
-  for (const ln of s.lines || []) {
-    if (ln.think || ln.silent) continue;
-    const a = t - ln[0], e = typedEnd(ln) - t;
-    if (a > 0 && e > -0.05) TALK[ln[2]] = clamp(Math.min(a / 0.1, (e + 0.05) / 0.12), 0, 1);
-  }
-  if (s.tod) TOD = lerp(s.tod[0], s.tod[1], clamp(t / s.dur, 0, 1));
-  s.draw(t, s.start + t);
-  const W = 0.32, next = SCENES[i + 1];
-  if (next && !next.noWipe && R_ > next.rstart - W) blockWipe((R_ - (next.rstart - W)) / W, true, i === 0 ? '#D97757' : null);
-  if (i > 0 && !s.noWipe && R_ < s.rstart + W) blockWipe((R_ - s.rstart) / W, false, i === 1 ? '#D97757' : null);
-}

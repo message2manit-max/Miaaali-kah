@@ -110,13 +110,24 @@ function drawOpus(x, y, o = {}) {
     else if (eyes === 'closed' || open < 0.3) p(ex, ey + 2, 4, 1, C.ink);
     else { const h = (eyes === 'up' ? 2 : 4) * open; p(ex + 1 + lk, ey + (eyes === 'up' ? 0 : (4 - h) / 2), 2, h, C.ink); }
   }
+  if (o.badge) {
+    const k = ease.back(clamp(o.badge, 0, 1));
+    if (k > 0.05) { p(-9 - 1.6 * k, -9.5, 3.2 * k, 1, C.gold); p(-9.5, -9 - 1.6 * k, 1, 3.2 * k, C.gold); p(-9.5, -9.5, 1, 1, '#FFF6D0'); }
+  }
   if (o.glint != null && o.glint > 0 && o.glint < 1) { const gx = o.glint * 5; p(-8 + gx - 1, -17, 1, 2, C.white); p(4 + gx - 1, -17 + tl, 1, 2, C.white); }
   opusArm(AR, 1);
-  if (o.item === 'roll') {
+  if (o.item === 'clipboard') {
+    cube(-29, -18, 9, 12, 2, C.wood, '#C08A55', C.woodD); p(-28, -16, 7, 9, C.white); p(-27, -19, 5, 1.5, C.steel);
+    for (let i = 0; i < 3; i++) { p(-27, -14.5 + i * 2.5, 1, 1, i < (o.checks || 0) ? '#3DA35D' : '#9AA0A6'); p(-25.5, -14.5 + i * 2.5, 4, 0.8, '#C9CDD2'); }
+  } else if (o.item === 'roll') {
     cube(-25, -14, 13, 3, 4, '#3A72B8', '#5C93D3', '#2A5590'); p(-25, -14, 1, 3, '#DCE8F5');
   } else if (o.item === 'sheet') {
     cube(-29, -21, 11, 9, 2, '#2E6DB4', '#4A86C9', '#1F4F86');
     p(-28, -19, 9, 1, '#BFD8F2'); p(-28, -17, 3, 4, '#BFD8F2'); p(-24, -17, 4, 2, '#BFD8F2'); p(-24, -14, 4, 1, '#BFD8F2');
+  }
+  if (o.stampOn != null) {
+    const hx = (AR.h[0] + AR.h[2] / 2) - 2, hy = AR.h[1] - 3;
+    cube(hx, hy, 4, 3, 4, '#C24B34', '#E8786A', '#8E3020'); cube(hx + 1, hy - 3, 2, 3, 2, C.wood);
   }
   if (o.pointTo) {
     const hx = x + (AR.h[0] + AR.h[2]) * st.sx, hy = yy + st.bob + (AR.h[1] + 2) * st.sy;
@@ -176,6 +187,8 @@ function drawSonnet(x, y, o = {}) {
   if (!mirrored) sonSleeve(SR, 1, sp !== 'kiss'); else sonSleeve(SL, -1, upL > 0.5);
   if (sp === 'up') {
     p(11, -17, 1, 7, C.spoon); p(10, -21, 3, 4, C.spoon); p(11, -22, 1, 1, C.spoon); p(12, -20, 1, 2, C.spoonD); p(10, -18, 1, 1, C.spoonD);
+  } else if (sp === 'trowel') {
+    p(11, -15, 1, 5, C.spoon); cube(9, -20, 5, 5, 2, '#B9BEC6', '#DDE1E6', '#8E949C'); p(10, -19, 1, 3, '#FFFFFF');
   } else if (sp === 'kiss') {
     cube(3, -10, 6, 2, 4, C.chef, C.white, C.chefSide); p(1, -11, 3, 2, C.skin);
   } else if (Array.isArray(sp)) {
@@ -256,13 +269,17 @@ function drawKid(x, y, o = {}) {
   const pc = PACKS[(o.pack || 0) % PACKS.length];
   const packFirst = SPF > 0; // the backpack sits behind the critter's back
   if (packFirst) cube(-6, -7, 2, 5, 4, pc);
-  cube(-4, -7, 8, 5, 6, C.skin);
+  const body = o.soot ? mixHex(C.skin, '#3A2A24', o.soot * 0.7) : C.skin;
+  cube(-4, -7, 8, 5, 6, body);
   p(-4, -5, 1, 1, pc);
   const lk = clamp(o.look || 0, -1, 1), open = eyeOpen(o, 7 + (o.pack || 0));
   if (o.eyes === 'happy') { p(-2, -5, 1, 1, C.ink); p(1, -5, 1, 1, C.ink); p(-3, -4, 1, 1, C.ink); p(2, -4, 1, 1, C.ink); }
   else if (open < 0.3) { p(-2, -5, 1, 1, C.ink); p(1, -5, 1, 1, C.ink); }
   else { p(-2 + lk, -6, 1, 2 * open, C.ink); p(1 + lk, -6, 1, 2 * open, C.ink); }
-  cube(4, -5, 1, 1, 2, C.skin);
+  const rz = o.raise || 0;
+  cube(4, -5 - 4 * rz, 1, 1 + 4 * rz * 0.6, 2, body);
+  if (o.goggles) { p(-4, -6.4, 8, 1.6, '#5FC8E8'); p(-3, -6.1, 1.6, 1, '#DFF6FF'); p(1, -6.1, 1.6, 1, '#DFF6FF'); }
+  if (o.book) { cube(-3, -4, 6, 3, 2, o.book, lite(o.book), dark(o.book)); p(-0.3, -4, 0.6, 3, '#FFFFFF'); }
   if (!packFirst) cube(-6, -7, 2, 5, 4, pc);
   anchor(id, x, yy + st.bob - 9);
 }

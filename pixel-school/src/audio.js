@@ -132,6 +132,23 @@ function sfx(ac, out, when, name, o = {}) {
       tone(ac, out, when + 0.1, { type: 'sine', f: 2637, d: 0.4, v: 0.05 });
       break;
     case 'xp': for (let i = 0; i < 7; i++) tone(ac, out, when + i * 0.11 + rnd(i) * 0.03, { type: 'sine', f: 1400 + i * 160 + rnd(i + 4) * 200, d: 0.12, v: 0.06 }); break;
+    case 'poof':
+      hiss(ac, out, when, { ft: 'lowpass', f: 900, q: 0.7, v: 0.7, a: 0.005, d: 0.6, sweep: [[0.5, 200]] });
+      tone(ac, out, when, { type: 'sine', f: 140, f2: 40, d: 0.35, v: 0.5 });
+      break;
+    case 'drum':
+      if (n % 2 === 0) tone(ac, out, when, { type: 'sine', f: 150, f2: 45, glide: 0.12, d: 0.2, v: 0.55 });
+      else hiss(ac, out, when, { f: 1800, q: 0.8, v: 0.35, d: 0.12, off: n * 0.13 });
+      hiss(ac, out, when, { ft: 'highpass', f: 6000, v: 0.08, d: 0.04, off: n * 0.07 });
+      break;
+    case 'type': hiss(ac, out, when + rnd(n) * 0.05, { ft: 'bandpass', f: 2600 + rnd(n + 3) * 1200, q: 3, v: 0.18, d: 0.03, off: n * 0.11 }); break;
+    case 'chalk': tone(ac, out, when, { type: 'sawtooth', f: 2400, f2: 2900, glide: 0.18, d: 0.2, v: 0.025, vib: [40, 200] }); break;
+    case 'firework':
+      tone(ac, out, when, { type: 'sine', f: 600, f2: 1800, glide: 0.55, d: 0.6, v: 0.06 });
+      hiss(ac, out, when + 0.6, { ft: 'lowpass', f: 1200, v: 0.55, d: 0.7, sweep: [[0.6, 300]], off: n * 0.1 });
+      tone(ac, out, when + 0.6, { type: 'sine', f: 90, f2: 40, d: 0.4, v: 0.35 });
+      for (let i = 0; i < 6; i++) hiss(ac, out, when + 0.75 + i * 0.09 + rnd(n + i) * 0.05, { ft: 'highpass', f: 4000, v: 0.12, d: 0.03, off: i * 0.13 });
+      break;
     case 'think': tone(ac, out, when, { type: 'sine', f: n % 2 ? 660 : 880, d: 0.12, v: 0.06 }); break;
     case 'check': tone(ac, out, when, { type: 'square', f: 1320, d: 0.04, v: 0.05 }); tone(ac, out, when + 0.04, { type: 'square', f: 1760, d: 0.05, v: 0.05 }); break;
     case 'clap': hiss(ac, out, when, { f: 1400, q: 1.2, v: 0.5, d: 0.08, off: n * 0.17 }); break;
